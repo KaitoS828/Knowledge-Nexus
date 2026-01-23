@@ -9,6 +9,7 @@ import { RightSidebar } from './RightSidebar';
 
 interface ArticleListProps {
   onSelectArticle: (article: Article) => void;
+  onSelectDocument: (document: any) => void;
 }
 
 // Simple Heatmap Component
@@ -48,7 +49,7 @@ const ActivityHeatmap = () => {
     );
 };
 
-export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle }) => {
+export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle, onSelectDocument }) => {
   const { articles, addArticle, deleteArticle, updateArticle, activityLogs, brain, documents, addDocument, deleteDocument } = useAppStore();
   const [urlInput, setUrlInput] = useState('');
   const [isFetching, setIsFetching] = useState(false);
@@ -383,6 +384,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle }) => 
             {documents.map((doc) => (
                 <div
                 key={doc.id}
+                onClick={() => onSelectDocument(doc)}
                 className="bg-gradient-to-br from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border-2 border-purple-200 hover:border-purple-300 rounded-2xl p-6 cursor-pointer transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1 flex flex-col h-full relative overflow-hidden"
                 >
                   <div className="flex justify-between items-start mb-4">

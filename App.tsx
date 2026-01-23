@@ -3,18 +3,20 @@ import { AppProvider, useAppStore } from './store';
 import { Sidebar } from './components/Sidebar';
 import { ArticleList } from './components/ArticleList';
 import { ArticleDetail } from './components/ArticleDetail';
+import { DocumentDetail } from './components/DocumentDetail';
 import { BrainEditor } from './components/BrainEditor';
 import { KnowledgeGraph } from './components/KnowledgeGraph';
 import { Onboarding } from './components/Onboarding';
 import { LandingPage } from './components/LandingPage';
 import { LearningDiary } from './components/LearningDiary';
-import { Article } from './types';
+import { Article, DocumentStoredUpload } from './types';
 import { Loader2 } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
   const { user, isOnboarded, isLoading } = useAppStore();
   const [view, setView] = useState('dashboard');
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [selectedDocument, setSelectedDocument] = useState<DocumentStoredUpload | null>(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
 
   if (isLoading) {
@@ -39,17 +41,26 @@ const MainLayout: React.FC = () => {
   const renderContent = () => {
     if (selectedArticle) {
       return (
-        <ArticleDetail 
-          article={selectedArticle} 
-          onBack={() => setSelectedArticle(null)} 
+        <ArticleDetail
+          article={selectedArticle}
+          onBack={() => setSelectedArticle(null)}
           toggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
+        />
+      );
+    }
+
+    if (selectedDocument) {
+      return (
+        <DocumentDetail
+          document={selectedDocument}
+          onBack={() => setSelectedDocument(null)}
         />
       );
     }
 
     switch (view) {
       case 'dashboard':
-        return <ArticleList onSelectArticle={setSelectedArticle} />;
+        return <ArticleList onSelectArticle={setSelectedArticle} onSelectDocument={setSelectedDocument} />;
       case 'diary':
         return <LearningDiary />;
       case 'brain':
@@ -57,14 +68,14 @@ const MainLayout: React.FC = () => {
       case 'graph':
         return <KnowledgeGraph />;
       default:
-        return <ArticleList onSelectArticle={setSelectedArticle} />;
+        return <ArticleList onSelectArticle={setSelectedArticle} onSelectDocument={setSelectedDocument} />;
     }
   };
 
-  if (selectedArticle) {
+  if (selectedArticle || selectedDocument) {
       return (
         <div className="flex h-screen w-screen overflow-hidden bg-nexus-50">
-            {isSidebarVisible && <Sidebar currentView={view} setView={setView} />}
+            {isSidebarVisible && selectedArticle && <Sidebar currentView={view} setView={setView} />}
             <main className="flex-1 h-full relative">
                 {renderContent()}
             </main>
