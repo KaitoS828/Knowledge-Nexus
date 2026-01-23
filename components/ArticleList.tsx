@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useAppStore } from '../store';
 import { Article } from '../types';
-import { Plus, Search, BookOpen, CheckCircle, Clock, Flame, Trophy, Hash, Loader2, Trash2, Compass, ArrowRight, Sparkles } from 'lucide-react';
+import { Plus, Search, BookOpen, CheckCircle, Clock, Flame, Trophy, Hash, Loader2, Trash2, Compass, ArrowRight, Sparkles, Upload, Link, FileText } from 'lucide-react';
 import { fetchArticleContent, analyzeArticleContent, getLearningRecommendations } from '../services/geminiService';
+import { processDocument } from '../services/pdfService';
 import { RightSidebar } from './RightSidebar';
 
 interface ArticleListProps {
@@ -48,11 +49,15 @@ const ActivityHeatmap = () => {
 };
 
 export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle }) => {
-  const { articles, addArticle, deleteArticle, updateArticle, activityLogs, brain } = useAppStore();
+  const { articles, addArticle, deleteArticle, updateArticle, activityLogs, brain, documents, addDocument, deleteDocument } = useAppStore();
   const [urlInput, setUrlInput] = useState('');
-  const [isFetching, setIsFetching] = useState(false); // Only for the initial fetch
+  const [isFetching, setIsFetching] = useState(false);
   const [filter, setFilter] = useState<'all' | 'new' | 'reading' | 'practice'>('all');
-  
+  const [inputMode, setInputMode] = useState<'url' | 'pdf'>('url');
+  const [isUploadingPDF, setIsUploadingPDF] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Recommendation State
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [isAnalyzingRecs, setIsAnalyzingRecs] = useState(false);
@@ -107,6 +112,59 @@ export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle }) => 
       const result = await getLearningRecommendations(brain.content, articles);
       setRecommendation(result);
       setIsAnalyzingRecs(false);
+  };
+
+  const handlePDFUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    if (file.type !== 'application/pdf') {
+      alert('PDFファイルのみアップロード可能です');
+      return;
+    }
+
+    setIsUploadingPDF(true);
+    try {
+      const result = await processDocument(file);
+
+      await addDocument({
+        id: crypto.randomUUID(),
+        name: file.name,
+        type: 'pdf',
+        content: result.content,
+        summary: result.summary,
+        keyPoints: result.keyPoints,
+        chapters: result.chapters,
+        addedAt: new Date().toISOString(),
+        fileSize: file.size
+      });
+
+      alert(`「${file.name}」の分析が完了しました`);
+    } catch (e) {
+      console.error(e);
+      alert('アップロードまたは分析に失敗しました。Gemini API Key設定を確認してください');
+    } finally {
+      setIsUploadingPDF(false);
+    }
+  };
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handlePDFUpload(e.dataTransfer.files);
+    }
   };
 
   const filteredArticles = articles.filter(a => filter === 'all' || a.status === filter);
@@ -200,25 +258,99 @@ export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle }) => 
                 </div>
             </div>
 
-            {/* Input Area */}
+            {/* Input Area with Tabs */}
             <div className="bg-white p-6 rounded-2xl border border-nexus-200 shadow-md mb-10 transition-all hover:shadow-lg">
-            <form onSubmit={handleAddArticle} className="flex gap-4">
-                <input
-                type="url"
-                placeholder="記事のURLを貼り付け (例: https://zenn.dev/...)"
-                className="flex-1 bg-nexus-50 border border-nexus-200 rounded-xl px-5 py-3 text-nexus-900 focus:outline-none focus:ring-2 focus:ring-nexus-accent placeholder-nexus-400 transition-all font-medium"
-                value={urlInput}
-                onChange={(e) => setUrlInput(e.target.value)}
-                />
-                <button 
-                type="submit" 
-                disabled={isFetching}
-                className="bg-nexus-900 hover:bg-nexus-800 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-colors disabled:opacity-50 shadow-md"
+              {/* Tab Switcher */}
+              <div className="flex gap-2 mb-4 border-b border-nexus-100 pb-4">
+                <button
+                  onClick={() => setInputMode('url')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                    inputMode === 'url'
+                      ? 'bg-nexus-900 text-white shadow-md'
+                      : 'bg-nexus-50 text-nexus-600 hover:bg-nexus-100'
+                  }`}
                 >
-                {isFetching ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
-                追加して読む
+                  <Link size={16} />
+                  URLから追加
                 </button>
-            </form>
+                <button
+                  onClick={() => setInputMode('pdf')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${
+                    inputMode === 'pdf'
+                      ? 'bg-nexus-900 text-white shadow-md'
+                      : 'bg-nexus-50 text-nexus-600 hover:bg-nexus-100'
+                  }`}
+                >
+                  <FileText size={16} />
+                  PDFから追加
+                </button>
+              </div>
+
+              {/* URL Input Form */}
+              {inputMode === 'url' && (
+                <form onSubmit={handleAddArticle} className="flex gap-4">
+                  <input
+                    type="url"
+                    placeholder="記事のURLを貼り付け (例: https://zenn.dev/...)"
+                    className="flex-1 bg-nexus-50 border border-nexus-200 rounded-xl px-5 py-3 text-nexus-900 focus:outline-none focus:ring-2 focus:ring-nexus-accent placeholder-nexus-400 transition-all font-medium"
+                    value={urlInput}
+                    onChange={(e) => setUrlInput(e.target.value)}
+                  />
+                  <button
+                    type="submit"
+                    disabled={isFetching}
+                    className="bg-nexus-900 hover:bg-nexus-800 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-colors disabled:opacity-50 shadow-md"
+                  >
+                    {isFetching ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
+                    追加して読む
+                  </button>
+                </form>
+              )}
+
+              {/* PDF Upload Area */}
+              {inputMode === 'pdf' && (
+                <div
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-xl p-8 text-center transition-all ${
+                    dragActive
+                      ? 'border-nexus-accent bg-nexus-50 scale-[1.02]'
+                      : 'border-nexus-200 hover:border-nexus-300 hover:bg-nexus-50'
+                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => handlePDFUpload(e.target.files)}
+                    className="hidden"
+                  />
+                  {isUploadingPDF ? (
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="animate-spin text-nexus-accent" size={40} />
+                      <p className="text-nexus-600 font-bold">PDF を分析中...</p>
+                    </div>
+                  ) : (
+                    <>
+                      <Upload className="mx-auto mb-4 text-nexus-400" size={48} />
+                      <h3 className="font-bold text-nexus-900 mb-2">PDFファイルをドラッグ＆ドロップ</h3>
+                      <p className="text-nexus-500 text-sm mb-4">または</p>
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        className="bg-nexus-900 hover:bg-nexus-800 text-white font-bold px-6 py-3 rounded-xl inline-flex items-center gap-2 transition-colors shadow-md"
+                      >
+                        <FileText size={18} />
+                        ファイルを選択
+                      </button>
+                      <p className="text-xs text-nexus-400 mt-4">
+                        技術書や論文をAIが自動分析します
+                      </p>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Filters */}
@@ -240,13 +372,70 @@ export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle }) => 
 
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-10">
-            {filteredArticles.length === 0 && (
+            {filteredArticles.length === 0 && documents.length === 0 && (
                 <div className="col-span-full text-center py-20 text-nexus-400 border-2 border-dashed border-nexus-200 rounded-2xl bg-white/50">
                 <BookOpen size={48} className="mx-auto mb-4 opacity-30" />
-                <p>記事が見つかりません。URLを入力して知識を蓄えましょう。</p>
+                <p>コンテンツがありません。URLまたはPDFを追加して知識を蓄えましょう。</p>
                 </div>
             )}
-            
+
+            {/* PDF Documents */}
+            {documents.map((doc) => (
+                <div
+                key={doc.id}
+                className="bg-gradient-to-br from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border-2 border-purple-200 hover:border-purple-300 rounded-2xl p-6 cursor-pointer transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1 flex flex-col h-full relative overflow-hidden"
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <span className="text-xs font-bold px-2 py-1 rounded border uppercase tracking-wider bg-purple-100 text-purple-700 border-purple-300 flex items-center gap-1">
+                      <FileText size={12} />
+                      PDF
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-purple-400 text-xs font-mono">
+                        {new Date(doc.addedAt).toLocaleDateString()}
+                      </span>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (confirm('このドキュメントを削除しますか？')) {
+                            deleteDocument(doc.id);
+                          }
+                        }}
+                        className="p-1.5 rounded-full text-purple-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-purple-900 mb-3 line-clamp-2 group-hover:text-purple-700 transition-colors">
+                    {doc.name}
+                  </h3>
+
+                  <p className="text-purple-700 text-sm mb-4 line-clamp-3 flex-1 leading-relaxed">
+                    {doc.summary}
+                  </p>
+
+                  {doc.keyPoints && doc.keyPoints.length > 0 && (
+                    <div className="border-t border-purple-200 pt-4 mt-auto">
+                      <p className="text-xs font-bold text-purple-600 mb-2">重要ポイント:</p>
+                      <ul className="space-y-1">
+                        {doc.keyPoints.slice(0, 2).map((point, i) => (
+                          <li key={i} className="text-xs text-purple-700 flex items-start gap-1">
+                            <span className="text-purple-400 mt-0.5">•</span>
+                            <span className="line-clamp-1">{point}</span>
+                          </li>
+                        ))}
+                      </ul>
+                      {doc.keyPoints.length > 2 && (
+                        <p className="text-xs text-purple-400 mt-2">+{doc.keyPoints.length - 2} more</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+            ))}
+
+            {/* Articles */}
             {filteredArticles.map((article) => (
                 <div 
                 key={article.id} 
