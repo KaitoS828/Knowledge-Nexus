@@ -8,9 +8,9 @@ const FIRECRAWL_API_KEY = import.meta.env.VITE_FIRECRAWL_API_KEY || '';
 // Initialize Gemini
 const ai = new GoogleGenAI({ apiKey: apiKey || '' });
 
-// Models (正しいGemini 2.0モデル名)
-const TEXT_MODEL = 'gemini-2.0-flash-exp';
-const REASONING_MODEL = 'gemini-2.0-flash-exp';
+// Models
+const TEXT_MODEL = 'gemini-3-flash-preview';
+const REASONING_MODEL = 'gemini-3-pro-preview';
 
 /**
  * Utility to clean up dense markdown and improve Japanese readability

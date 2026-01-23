@@ -15,10 +15,11 @@ export interface ExtractedDocument {
 export const extractTextFromPDF = async (file: File): Promise<string> => {
   // Dynamic import for PDF.js
   const pdfjsLib = await import('pdfjs-dist');
-  
-  // Set worker source
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-  
+
+  // Import worker from node_modules
+  const pdfjsWorker = await import('pdfjs-dist/build/pdf.worker.min.mjs?url');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker.default;
+
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
   
@@ -47,7 +48,7 @@ export const analyzeDocument = async (
   }
 
   const ai = new GoogleGenAI({ apiKey });
-  const model = 'gemini-2.0-flash-exp';
+  const model = 'gemini-3-flash-preview';
   
   const prompt = `
 以下のドキュメント「${documentName}」を分析してください。
