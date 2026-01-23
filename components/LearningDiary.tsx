@@ -102,53 +102,53 @@ export const LearningDiary: React.FC = () => {
 
   return (
     <div className="flex h-screen bg-nexus-50 overflow-hidden relative">
-      {/* 1. Left Sidebar: Past Diaries List (Existing) */}
-      <div className="w-64 border-r border-nexus-200 bg-white flex flex-col shrink-0 hidden lg:flex">
-         <div className="p-4 border-b border-nexus-200">
-            <h2 className="text-lg font-bold text-nexus-900 flex items-center gap-2 mb-3">
-                <Calendar size={18} className="text-nexus-600" /> 過去ログ
-            </h2>
-            <div className="relative">
-                <Search className="absolute left-3 top-2.5 text-nexus-400" size={14} />
-                <input 
-                    className="w-full bg-nexus-50 border border-nexus-200 rounded-lg pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-nexus-accent"
-                    placeholder="ログを検索..."
-                    value={search}
-                    onChange={e => setSearch(e.target.value)}
-                />
+      {/* 1. Combined Left Sidebar: Past Diaries (Top) & Learning Tweets (Bottom) */}
+      <div className="w-[320px] border-r border-nexus-200 bg-white flex flex-col shrink-0 hidden lg:flex">
+         
+         {/* Past Logs Section */}
+         <div className="flex-[4] flex flex-col min-h-0 border-b border-nexus-200">
+            <div className="p-4 border-b border-nexus-200 bg-white/50">
+                <h2 className="text-sm font-bold text-nexus-900 flex items-center gap-2 mb-3">
+                    <Calendar size={16} className="text-nexus-600" /> 過去ログ
+                </h2>
+                <div className="relative">
+                    <Search className="absolute left-3 top-2.5 text-nexus-400" size={14} />
+                    <input 
+                        className="w-full bg-nexus-50 border border-nexus-200 rounded-lg pl-9 pr-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-nexus-accent"
+                        placeholder="ログを検索..."
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                    />
+                </div>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto p-3 space-y-3 bg-nexus-50/30">
+                {filteredEntries.length === 0 && (
+                    <div className="text-center text-nexus-400 mt-10 text-[10px]">
+                        {search ? "見つかりませんでした" : "記録なし"}
+                    </div>
+                )}
+                {filteredEntries.map(entry => (
+                    <div key={entry.id} onClick={() => setSelectedEntry(entry)} className="bg-white p-3 rounded-xl border border-nexus-200 hover:border-nexus-300 shadow-sm group transition-all cursor-pointer hover:bg-nexus-50">
+                        <div className="flex justify-between items-start mb-1">
+                            <span className="text-[10px] font-mono text-nexus-400 flex items-center gap-1 bg-nexus-50 px-1.5 py-0.5 rounded">
+                                {new Date(entry.date).toLocaleDateString()}
+                            </span>
+                            <button onClick={(e) => { e.stopPropagation(); deleteDiaryEntry(entry.id); }} className="text-nexus-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Trash2 size={12} />
+                            </button>
+                        </div>
+                        <p className="text-nexus-800 text-[11px] line-clamp-2 leading-relaxed whitespace-pre-wrap">
+                            {entry.content}
+                        </p>
+                    </div>
+                ))}
             </div>
          </div>
-         
-         <div className="flex-1 overflow-y-auto p-3 space-y-3">
-             {filteredEntries.length === 0 && (
-                 <div className="text-center text-nexus-400 mt-10 text-xs">
-                     {search ? "見つかりませんでした" : "記録なし"}
-                 </div>
-             )}
-             {filteredEntries.map(entry => (
-                 <div key={entry.id} onClick={() => setSelectedEntry(entry)} className="bg-white p-3 rounded-lg border border-nexus-200 hover:border-nexus-300 shadow-sm group transition-all cursor-pointer hover:bg-nexus-50">
-                     <div className="flex justify-between items-start mb-1">
-                         <span className="text-[10px] font-mono text-nexus-400 flex items-center gap-1 bg-nexus-50 px-1.5 py-0.5 rounded">
-                            {new Date(entry.date).toLocaleDateString()}
-                         </span>
-                         <button onClick={(e) => { e.stopPropagation(); deleteDiaryEntry(entry.id); }} className="text-nexus-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
-                             <Trash2 size={12} />
-                         </button>
-                     </div>
-                     <p className="text-nexus-800 text-xs line-clamp-2 leading-relaxed whitespace-pre-wrap">
-                         {entry.content}
-                     </p>
-                 </div>
-             ))}
-         </div>
-      </div>
 
-      {/* Main Content: Split View */}
-      <div className="flex-1 flex overflow-hidden">
-          
-          {/* 2. Middle Column: Learning Tweets (Timeline) */}
-          <div className="w-[320px] bg-nexus-50 border-r border-nexus-200 flex flex-col shrink-0">
-             <div className="p-4 bg-white border-b border-nexus-200">
+         {/* Learning Tweets Section */}
+         <div className="flex-[6] flex flex-col min-h-0">
+             <div className="p-4 bg-white border-b border-nexus-200 sticky top-0 z-10">
                  <h2 className="font-bold text-nexus-800 flex items-center gap-2 text-sm mb-1">
                      <MessageSquare size={16} className="text-nexus-500" /> 学習つぶやき
                  </h2>
@@ -176,9 +176,9 @@ export const LearningDiary: React.FC = () => {
              </div>
 
              {/* Tweet List */}
-             <div className="flex-1 overflow-y-auto p-4 space-y-3">
+             <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-nexus-50/20">
                  {learningTweets.length === 0 && (
-                     <div className="text-center py-10 text-nexus-400 text-xs italic">
+                     <div className="text-center py-10 text-nexus-400 text-[10px] italic">
                          まだつぶやきがありません
                      </div>
                  )}
@@ -197,16 +197,16 @@ export const LearningDiary: React.FC = () => {
                                     <Trash2 size={10} />
                                 </button>
                              </div>
-                             <p className="text-xs text-nexus-700 bg-white p-2 rounded-lg border border-nexus-100 shadow-sm leading-relaxed">
+                             <div className="text-[11px] text-nexus-700 bg-white p-2.5 rounded-xl border border-nexus-100 shadow-sm leading-relaxed">
                                  {t.content}
-                             </p>
+                             </div>
                          </div>
                      </div>
                  ))}
              </div>
 
              {/* Action: Draft from Tweets */}
-             <div className="p-4 border-t border-nexus-200 bg-white">
+             <div className="p-4 border-t border-nexus-200 bg-white shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
                  <button 
                     onClick={handleDraftFromTweets}
                     disabled={isDrafting || learningTweets.length === 0}
@@ -216,7 +216,11 @@ export const LearningDiary: React.FC = () => {
                     つぶやきから日記を作成
                  </button>
              </div>
-          </div>
+         </div>
+      </div>
+
+      {/* Main Content: Diary Editor */}
+      <div className="flex-1 flex overflow-hidden">
 
           {/* 3. Right Column: Structured Diary Editor */}
           <div className="flex-1 bg-white flex flex-col overflow-y-auto">
