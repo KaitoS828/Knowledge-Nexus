@@ -76,20 +76,20 @@ export const LearningDiary: React.FC = () => {
     
     // AI Call (Simplified local logic to call Gemini directly here for this specific feature)
     try {
-        const apiKey = process.env.API_KEY || process.env.GEMINI_API_KEY;
+        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
         const ai = new GoogleGenAI({ apiKey });
-        
+
         const logs = diaryEntries.slice(0, 10).map(e => `- ${e.date}: ${e.content}`).join('\n');
         const prompt = `
             以下の学習日記（直近10件）を分析し、ユーザーの「学習の傾向」「よくあるつまづき」「次のステップへのアドバイス」を
             Markdown形式で簡潔に（300文字程度）フィードバックしてください。励ましのトーンでお願いします。
-            
+
             Logs:
             ${logs}
         `;
 
         const r = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-2.0-flash-exp',
             contents: prompt
         });
         setInsight(r.text || "分析できませんでした。");

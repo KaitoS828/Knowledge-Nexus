@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
 const getApiKey = () => {
-    return import.meta.env.NEXT_PUBLIC_GEMINI_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
+    return import.meta.env.VITE_GEMINI_API_KEY || '';
 };
 
 export interface ExtractedDocument {
@@ -46,8 +46,8 @@ export const analyzeDocument = async (
     throw new Error("Gemini API key not found");
   }
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const model = genAI.getGenerativeModel({ model: 'gemini-3-flash-preview' });
+  const ai = new GoogleGenAI({ apiKey });
+  const model = 'gemini-2.0-flash-exp';
   
   const prompt = `
 以下のドキュメント「${documentName}」を分析してください。
@@ -70,8 +70,8 @@ ${content.slice(0, 15000)}
 `;
 
   try {
-    const result = await model.generateContent(prompt);
-    const text = result.response.text() || '';
+    const result = await ai.models.generateContent({ model, contents: prompt });
+    const text = result.text || '';
     
     // Extract JSON from response
     const jsonMatch = text.match(/\{[\s\S]*\}/);

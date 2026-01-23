@@ -1,9 +1,9 @@
 import React from 'react';
 import { useAppStore } from '../store';
-import { Sparkles, Brain, Zap, Share2, ArrowRight, Layout, TrendingUp, User } from 'lucide-react';
+import { Sparkles, Brain, Zap, Share2, ArrowRight, Layout, TrendingUp, User, Github } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
-  const { signInWithGoogle, signInAsGuest } = useAppStore();
+  const { signInWithGoogle, signInWithGitHub, signInAsGuest } = useAppStore();
 
   return (
     <div className="min-h-screen bg-nexus-50 text-nexus-900 font-sans selection:bg-nexus-900 selection:text-white">
@@ -39,7 +39,7 @@ export const LandingPage: React.FC = () => {
         </p>
 
         <div className="flex flex-col md:flex-row items-center justify-center gap-4 animate-in fade-in slide-in-from-bottom-10 duration-700 delay-300">
-            <button 
+            <button
             onClick={signInWithGoogle}
             className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-nexus-900 font-lg rounded-xl hover:bg-nexus-800 hover:shadow-lg hover:-translate-y-0.5 w-full md:w-auto"
             >
@@ -52,8 +52,17 @@ export const LandingPage: React.FC = () => {
                 Googleで始める
                 <ArrowRight className="ml-2 transition-transform group-hover:translate-x-1" size={18} />
             </button>
-            
-            <button 
+
+            <button
+            onClick={signInWithGitHub}
+            className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-gray-800 font-lg rounded-xl hover:bg-gray-700 hover:shadow-lg hover:-translate-y-0.5 w-full md:w-auto"
+            >
+                <Github size={18} className="mr-3" />
+                GitHubで始める
+                <ArrowRight className="ml-2 transition-transform group-hover:translate-x-1" size={18} />
+            </button>
+
+            <button
                 onClick={signInAsGuest}
                 className="group inline-flex items-center justify-center px-8 py-4 font-bold text-nexus-600 bg-white border border-nexus-200 rounded-xl hover:bg-nexus-50 hover:text-nexus-900 transition-all w-full md:w-auto"
             >

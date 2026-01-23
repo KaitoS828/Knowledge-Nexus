@@ -78,6 +78,18 @@ export interface Bookmark {
   addedAt: string;
 }
 
+export interface DocumentStoredUpload {
+  id: string;
+  name: string;
+  type: 'pdf' | 'markdown' | 'text';
+  content: string;
+  summary: string;
+  keyPoints: string[];
+  chapters: { title: string; content: string; summary: string }[];
+  addedAt: string;
+  fileSize: number;
+}
+
 export interface AppState {
   user: any | null; // Supabase user
   brain: PersonalBrain;
@@ -86,6 +98,7 @@ export interface AppState {
   diaryEntries: DiaryEntry[];
   learningTweets: LearningTweet[];
   bookmarks: Bookmark[];
+  documents: DocumentStoredUpload[];
   isOnboarded: boolean;
   isLoading: boolean;
 }

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AppState, Article, Bookmark, DiaryEntry, LearningTweet } from './types';
+import { AppState, Article, Bookmark, DiaryEntry, LearningTweet, DocumentStoredUpload } from './types';
 import { supabase } from './services/supabase';
 
 const INITIAL_BRAIN = `# 私のエンジニア外部脳
@@ -24,15 +24,17 @@ const INITIAL_STATE: AppState = {
   activityLogs: [],
   diaryEntries: [],
   learningTweets: [],
-  bookmarks: []
+  bookmarks: [],
+  documents: []
 };
 
 interface AppContextType extends AppState {
   signInWithGoogle: () => Promise<void>;
+  signInWithGitHub: () => Promise<void>;
   signInAsGuest: () => Promise<void>;
   signOut: () => Promise<void>;
   addArticle: (article: Article) => Promise<void>;
-  deleteArticle: (id: string) => Promise<void>; 
+  deleteArticle: (id: string) => Promise<void>;
   updateArticleStatus: (id: string, status: Article['status']) => Promise<void>;
   updateArticle: (id: string, updates: Partial<Article>) => Promise<void>;
   updateBrain: (content: string) => Promise<void>;
@@ -48,6 +50,9 @@ interface AppContextType extends AppState {
   // Bookmarks
   addBookmark: (url: string) => Promise<void>;
   removeBookmark: (id: string) => Promise<void>;
+  // Documents
+  addDocument: (doc: DocumentStoredUpload) => Promise<void>;
+  deleteDocument: (id: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -111,6 +116,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const { data: tweetsData } = await supabase.from('learning_tweets').select('*').eq('user_id', user.id).order('timestamp', { ascending: false });
     // Fetch Bookmarks
     const { data: bookmarksData } = await supabase.from('bookmarks').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
+    // Fetch Documents
+    const { data: documentsData } = await supabase.from('documents').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
 
     setState(prev => ({
       ...prev,
@@ -138,6 +145,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           url: b.url,
           note: b.note,
           addedAt: b.added_at
+      })) || [],
+      documents: documentsData?.map((d: any) => ({
+          id: d.id,
+          name: d.name,
+          type: d.type,
+          content: d.content,
+          summary: d.summary,
+          keyPoints: d.key_points || [],
+          chapters: d.chapters || [],
+          addedAt: d.added_at,
+          fileSize: d.file_size
       })) || []
     }));
   };
@@ -145,6 +163,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    });
+    if (error) alert(error.message);
+  };
+
+  const signInWithGitHub = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'github',
       options: {
         redirectTo: window.location.origin
       }
@@ -395,23 +423,54 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const removeBookmark = async (id: string) => {
     if (!state.user) return;
     setState(prev => ({ ...prev, bookmarks: prev.bookmarks.filter(b => b.id !== id) }));
-    
+
     if (state.user.isGuest) return;
     await supabase.from('bookmarks').delete().eq('id', id);
   };
 
+  // Document Actions
+  const addDocument = async (doc: DocumentStoredUpload) => {
+    if (!state.user) return;
+    setState(prev => ({ ...prev, documents: [doc, ...prev.documents] }));
+    logActivity();
+
+    if (state.user.isGuest) return;
+
+    await supabase.from('documents').insert({
+      id: doc.id,
+      user_id: state.user.id,
+      name: doc.name,
+      type: doc.type,
+      content: doc.content,
+      summary: doc.summary,
+      key_points: doc.keyPoints,
+      chapters: doc.chapters,
+      added_at: doc.addedAt,
+      file_size: doc.fileSize
+    });
+  };
+
+  const deleteDocument = async (id: string) => {
+    if (!state.user) return;
+    setState(prev => ({ ...prev, documents: prev.documents.filter(d => d.id !== id) }));
+
+    if (state.user.isGuest) return;
+    await supabase.from('documents').delete().eq('id', id);
+  };
+
   return (
-    <AppContext.Provider value={{ 
-      ...state, 
+    <AppContext.Provider value={{
+      ...state,
       signInWithGoogle,
+      signInWithGitHub,
       signInAsGuest,
       signOut,
       addArticle,
       deleteArticle,
-      updateArticleStatus, 
-      updateArticle, 
-      updateBrain, 
-      completeOnboarding, 
+      updateArticleStatus,
+      updateArticle,
+      updateBrain,
+      completeOnboarding,
       logActivity,
       addDiaryEntry,
       deleteDiaryEntry,
@@ -419,7 +478,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       deleteTweet,
       clearTweets,
       addBookmark,
-      removeBookmark
+      removeBookmark,
+      addDocument,
+      deleteDocument
     }}>
       {children}
     </AppContext.Provider>
