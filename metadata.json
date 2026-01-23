@@ -1,0 +1,5 @@
+{
+  "name": "Knowledge Nexus",
+  "description": "エンジニアのためのAI搭載外部脳。技術記事を集約し、既存の知識とのギャップ分析を行い、学習の成長を可視化します。",
+  "requestFramePermissions": []
+}
