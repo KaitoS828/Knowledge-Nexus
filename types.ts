@@ -90,6 +90,43 @@ export interface DocumentStoredUpload {
   fileSize: number;
 }
 
+export type PlanType = 'free' | 'pro';
+export type BillingCycle = 'monthly' | 'yearly';
+export type SubscriptionStatus = 'active' | 'canceled' | 'past_due' | 'trialing';
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  planType: PlanType;
+  billingCycle?: BillingCycle;
+  status: SubscriptionStatus;
+  stripeCustomerId?: string;
+  stripeSubscriptionId?: string;
+  stripePriceId?: string;
+  currentPeriodStart?: string;
+  currentPeriodEnd?: string;
+  cancelAtPeriodEnd: boolean;
+  canceledAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UsageLog {
+  id: string;
+  userId: string;
+  operationType: 'article_analysis' | 'pdf_analysis' | 'quiz_generation' | 'chat_message' | 'brain_merge' | 'learning_action_generation';
+  inputTokens: number;
+  outputTokens: number;
+  estimatedCostCents: number;
+  resourceId?: string;
+  createdAt: string;
+}
+
+export interface UsageSummary {
+  totalOperations: number;
+  totalCostCents: number;
+}
+
 export interface AppState {
   user: any | null; // Supabase user
   brain: PersonalBrain;
@@ -98,6 +135,8 @@ export interface AppState {
   diaryEntries: DiaryEntry[];
   learningTweets: LearningTweet[];
   bookmarks: Bookmark[];
+  subscription: Subscription | null;
+  usageSummary: UsageSummary | null;
   documents: DocumentStoredUpload[];
   isOnboarded: boolean;
   isLoading: boolean;
