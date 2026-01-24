@@ -98,11 +98,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onBack }) => {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-start gap-2">
                   <Check className="text-green-600 mt-0.5 flex-shrink-0" size={18} />
-                  <span className="text-nexus-700">記事保存: <strong>5件まで</strong></span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <Check className="text-green-600 mt-0.5 flex-shrink-0" size={18} />
-                  <span className="text-nexus-700">PDF保存: <strong>2件まで</strong></span>
+                  <span className="text-nexus-700">記事・PDF保存: <strong>合計2件まで</strong></span>
                 </li>
                 <li className="flex items-start gap-2">
                   <Check className="text-green-600 mt-0.5 flex-shrink-0" size={18} />
@@ -115,6 +111,10 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onBack }) => {
                 <li className="flex items-start gap-2">
                   <Check className="text-green-600 mt-0.5 flex-shrink-0" size={18} />
                   <span className="text-nexus-700">学習ダイアリー</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <Check className="text-green-600 mt-0.5 flex-shrink-0" size={18} />
+                  <span className="text-nexus-700">ナレッジグラフ</span>
                 </li>
               </ul>
 
@@ -220,12 +220,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onBack }) => {
               </thead>
               <tbody className="divide-y divide-nexus-100">
                 <tr>
-                  <td className="py-4 px-4 text-nexus-800">記事保存数</td>
-                  <td className="text-center py-4 px-4">5件</td>
-                  <td className="text-center py-4 px-4 bg-nexus-50 font-bold">無制限</td>
-                </tr>
-                <tr>
-                  <td className="py-4 px-4 text-nexus-800">PDF保存数</td>
+                  <td className="py-4 px-4 text-nexus-800">記事・PDF保存数（合計）</td>
                   <td className="text-center py-4 px-4">2件</td>
                   <td className="text-center py-4 px-4 bg-nexus-50 font-bold">無制限</td>
                 </tr>

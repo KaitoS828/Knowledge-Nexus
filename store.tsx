@@ -60,6 +60,7 @@ interface AppContextType extends AppState {
   upgradeToProYearly: () => Promise<void>;
   cancelSubscription: () => Promise<void>;
   checkUsageLimit: () => Promise<boolean>;
+  checkStorageLimit: () => boolean;
   logUsage: (operationType: string, inputTokens: number, outputTokens: number, resourceId?: string) => Promise<void>;
   refreshUsage: () => Promise<void>;
 }
@@ -262,6 +263,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const addArticle = async (article: Article) => {
     if (!state.user) return;
+
+    // Check storage limit for free users
+    if (!checkStorageLimit() && !state.user.isGuest) {
+      alert('Freeプランの保存上限（2件）に達しました。Proプランにアップグレードしてください。');
+      throw new Error('Storage limit reached');
+    }
 
     // Optimistic UI
     setState(prev => ({ ...prev, articles: [article, ...prev.articles] }));
@@ -466,6 +473,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Document Actions
   const addDocument = async (doc: DocumentStoredUpload) => {
     if (!state.user) return;
+
+    // Check storage limit for free users
+    if (!checkStorageLimit() && !state.user.isGuest) {
+      alert('Freeプランの保存上限（2件）に達しました。Proプランにアップグレードしてください。');
+      throw new Error('Storage limit reached');
+    }
+
     setState(prev => ({ ...prev, documents: [doc, ...prev.documents] }));
     logActivity();
 
@@ -559,8 +573,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return state.usageSummary ? state.usageSummary.totalOperations < 1000 : true;
     }
 
-    // Free users: 10 operations per month
+    // Free users: 10 AI operations per month
     return state.usageSummary ? state.usageSummary.totalOperations < 10 : true;
+  };
+
+  const checkStorageLimit = (): boolean => {
+    if (!state.user) return false;
+
+    // Pro users have unlimited storage
+    if (state.subscription?.planType === 'pro') return true;
+
+    // Free users: 2 items total (articles + documents)
+    const totalItems = state.articles.length + state.documents.length;
+    return totalItems < 2;
   };
 
   const logUsage = async (
@@ -633,6 +658,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       upgradeToProYearly,
       cancelSubscription,
       checkUsageLimit,
+      checkStorageLimit,
       logUsage,
       refreshUsage
     }}>
