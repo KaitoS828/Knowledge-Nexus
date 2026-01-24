@@ -9,6 +9,7 @@ import { KnowledgeGraph } from './components/KnowledgeGraph';
 import { Onboarding } from './components/Onboarding';
 import { LandingPage } from './components/LandingPage';
 import { LearningDiary } from './components/LearningDiary';
+import { PricingPage } from './components/PricingPage';
 import { Article, DocumentStoredUpload } from './types';
 import { Loader2 } from 'lucide-react';
 
@@ -67,6 +68,8 @@ const MainLayout: React.FC = () => {
         return <BrainEditor />;
       case 'graph':
         return <KnowledgeGraph />;
+      case 'pricing':
+        return <PricingPage onBack={() => setView('dashboard')} />;
       default:
         return <ArticleList onSelectArticle={setSelectedArticle} onSelectDocument={setSelectedDocument} />;
     }

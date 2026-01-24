@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppStore } from '../store';
-import { Layout, BookOpen, Brain, Activity, Settings, PenTool, LogOut } from 'lucide-react';
+import { Layout, BookOpen, Brain, Activity, Settings, PenTool, LogOut, CreditCard } from 'lucide-react';
 
 interface SidebarProps {
   currentView: string;
@@ -47,11 +47,22 @@ export const Sidebar: React.FC<SidebarProps> = ({ currentView, setView }) => {
       </nav>
 
       <div className="p-4 border-t border-nexus-100 space-y-1">
+         <button
+            onClick={() => setView('pricing')}
+            className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
+              currentView === 'pricing'
+                ? 'text-nexus-900 bg-nexus-50 font-bold rounded-lg'
+                : 'text-nexus-400 hover:text-nexus-900'
+            }`}
+         >
+            <CreditCard size={20} />
+            <span className="hidden lg:block">料金プラン</span>
+         </button>
          <button className="w-full flex items-center gap-3 px-4 py-3 text-nexus-400 hover:text-nexus-900 transition-colors">
             <Settings size={20} />
             <span className="hidden lg:block">設定</span>
          </button>
-         <button 
+         <button
             onClick={signOut}
             className="w-full flex items-center gap-3 px-4 py-3 text-nexus-400 hover:text-red-600 transition-colors"
          >

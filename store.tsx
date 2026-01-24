@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AppState, Article, Bookmark, DiaryEntry, LearningTweet, DocumentStoredUpload } from './types';
+import { AppState, Article, Bookmark, DiaryEntry, LearningTweet, DocumentStoredUpload, Subscription, UsageSummary } from './types';
 import { supabase } from './services/supabase';
 
 const INITIAL_BRAIN = `# 私のエンジニア外部脳
@@ -25,7 +25,9 @@ const INITIAL_STATE: AppState = {
   diaryEntries: [],
   learningTweets: [],
   bookmarks: [],
-  documents: []
+  documents: [],
+  subscription: null,
+  usageSummary: null
 };
 
 interface AppContextType extends AppState {
@@ -53,6 +55,13 @@ interface AppContextType extends AppState {
   // Documents
   addDocument: (doc: DocumentStoredUpload) => Promise<void>;
   deleteDocument: (id: string) => Promise<void>;
+  // Subscription
+  upgradeToProMonthly: () => Promise<void>;
+  upgradeToProYearly: () => Promise<void>;
+  cancelSubscription: () => Promise<void>;
+  checkUsageLimit: () => Promise<boolean>;
+  logUsage: (operationType: string, inputTokens: number, outputTokens: number, resourceId?: string) => Promise<void>;
+  refreshUsage: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -103,7 +112,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const loadUserData = async (user: any) => {
     setState(prev => ({ ...prev, isLoading: true, user }));
-    
+
     // Fetch Brain
     const { data: brainData } = await supabase.from('brains').select('*').eq('user_id', user.id).single();
     // Fetch Articles
@@ -118,6 +127,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const { data: bookmarksData } = await supabase.from('bookmarks').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
     // Fetch Documents
     const { data: documentsData } = await supabase.from('documents').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
+
+    // Fetch Subscription
+    const { data: subscriptionData } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).single();
+
+    // Fetch Current Month Usage
+    const { data: usageData } = await supabase.rpc('get_current_month_usage', { p_user_id: user.id }).single();
 
     setState(prev => ({
       ...prev,
@@ -156,7 +171,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           chapters: d.chapters || [],
           addedAt: d.added_at,
           fileSize: d.file_size
-      })) || []
+      })) || [],
+      subscription: subscriptionData ? {
+        id: subscriptionData.id,
+        userId: subscriptionData.user_id,
+        planType: subscriptionData.plan_type,
+        billingCycle: subscriptionData.billing_cycle,
+        status: subscriptionData.status,
+        stripeCustomerId: subscriptionData.stripe_customer_id,
+        stripeSubscriptionId: subscriptionData.stripe_subscription_id,
+        stripePriceId: subscriptionData.stripe_price_id,
+        currentPeriodStart: subscriptionData.current_period_start,
+        currentPeriodEnd: subscriptionData.current_period_end,
+        cancelAtPeriodEnd: subscriptionData.cancel_at_period_end,
+        canceledAt: subscriptionData.canceled_at,
+        createdAt: subscriptionData.created_at,
+        updatedAt: subscriptionData.updated_at
+      } : null,
+      usageSummary: usageData ? {
+        totalOperations: usageData.total_operations,
+        totalCostCents: usageData.total_cost_cents
+      } : { totalOperations: 0, totalCostCents: 0 }
     }));
   };
 
@@ -458,6 +493,119 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await supabase.from('documents').delete().eq('id', id);
   };
 
+  // ========== Subscription Functions ==========
+
+  const upgradeToProMonthly = async () => {
+    if (!state.user || state.user.isGuest) {
+      throw new Error('ログインが必要です');
+    }
+
+    // TODO: Implement Stripe checkout
+    // For now, just update the database directly (for testing)
+    const { error } = await supabase.from('subscriptions').upsert({
+      user_id: state.user.id,
+      plan_type: 'pro',
+      billing_cycle: 'monthly',
+      status: 'active',
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    if (error) throw error;
+
+    // Reload user data to get updated subscription
+    await loadUserData(state.user);
+  };
+
+  const upgradeToProYearly = async () => {
+    if (!state.user || state.user.isGuest) {
+      throw new Error('ログインが必要です');
+    }
+
+    // TODO: Implement Stripe checkout
+    const { error } = await supabase.from('subscriptions').upsert({
+      user_id: state.user.id,
+      plan_type: 'pro',
+      billing_cycle: 'yearly',
+      status: 'active',
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+    });
+
+    if (error) throw error;
+    await loadUserData(state.user);
+  };
+
+  const cancelSubscription = async () => {
+    if (!state.user || state.user.isGuest) return;
+
+    const { error } = await supabase.from('subscriptions')
+      .update({
+        cancel_at_period_end: true,
+        canceled_at: new Date().toISOString()
+      })
+      .eq('user_id', state.user.id);
+
+    if (error) throw error;
+    await loadUserData(state.user);
+  };
+
+  const checkUsageLimit = async (): Promise<boolean> => {
+    if (!state.user) return false;
+    if (state.user.isGuest) return state.usageSummary ? state.usageSummary.totalOperations < 10 : true;
+
+    // Pro users have no limit (soft limit of 1000)
+    if (state.subscription?.planType === 'pro') {
+      return state.usageSummary ? state.usageSummary.totalOperations < 1000 : true;
+    }
+
+    // Free users: 10 operations per month
+    return state.usageSummary ? state.usageSummary.totalOperations < 10 : true;
+  };
+
+  const logUsage = async (
+    operationType: string,
+    inputTokens: number,
+    outputTokens: number,
+    resourceId?: string
+  ) => {
+    if (!state.user || state.user.isGuest) return;
+
+    // Calculate cost (Gemini 3 Flash pricing)
+    // Input: $0.50 / 1M tokens, Output: $3.00 / 1M tokens
+    const inputCostCents = (inputTokens / 1000000) * 0.50 * 150; // Convert to JPY cents
+    const outputCostCents = (outputTokens / 1000000) * 3.00 * 150;
+    const estimatedCostCents = Math.round(inputCostCents + outputCostCents);
+
+    await supabase.from('usage_logs').insert({
+      user_id: state.user.id,
+      operation_type: operationType,
+      input_tokens: inputTokens,
+      output_tokens: outputTokens,
+      estimated_cost_cents: estimatedCostCents,
+      resource_id: resourceId
+    });
+
+    // Refresh usage summary
+    await refreshUsage();
+  };
+
+  const refreshUsage = async () => {
+    if (!state.user || state.user.isGuest) return;
+
+    const { data: usageData } = await supabase.rpc('get_current_month_usage', {
+      p_user_id: state.user.id
+    }).single();
+
+    setState(prev => ({
+      ...prev,
+      usageSummary: usageData ? {
+        totalOperations: usageData.total_operations,
+        totalCostCents: usageData.total_cost_cents
+      } : { totalOperations: 0, totalCostCents: 0 }
+    }));
+  };
+
   return (
     <AppContext.Provider value={{
       ...state,
@@ -480,7 +628,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       addBookmark,
       removeBookmark,
       addDocument,
-      deleteDocument
+      deleteDocument,
+      upgradeToProMonthly,
+      upgradeToProYearly,
+      cancelSubscription,
+      checkUsageLimit,
+      logUsage,
+      refreshUsage
     }}>
       {children}
     </AppContext.Provider>
