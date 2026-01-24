@@ -74,7 +74,9 @@ export const fetchArticleContent = async (url: string): Promise<Partial<Article>
         },
         body: JSON.stringify({
           url: url,
-          formats: ['markdown']
+          formats: ['markdown'],
+          onlyMainContent: true,
+          excludeTags: ['nav', 'header', 'footer', 'aside', 'script', 'style', 'form', 'iframe']
         })
       });
 
@@ -154,6 +156,10 @@ export const analyzeArticleContent = async (content: string): Promise<Partial<Ar
 
     # 入力テキスト
     ${content.substring(0, 30000)} ... (truncated for prompt)
+
+    # 重要な注意事項
+    入力テキストには、SNSボタン（「Twitterにポスト」「Facebookに投稿」など）、ナビゲーション、広告、フッター情報などのノイズが含まれている可能性があります。
+    これらは無視し、**記事本文のみ**に注目して分析してください。
 
     # タスク
     この記事を分析し、エンジニアが実務や学習に活かすための具体的な提案を作成してください。
