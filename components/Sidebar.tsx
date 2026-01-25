@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Layout, BookOpen, Brain, Activity, Settings, PenTool, LogOut, CreditCard, User } from 'lucide-react';
+import { Layout, BookOpen, Brain, Activity, Settings, PenTool, LogOut, CreditCard, User, X } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
 import { AuthOptionsModal } from './AuthOptionsModal';
 
-export const Sidebar: React.FC = () => {
+interface SidebarProps {
+    onClose?: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const { signOut, user } = useAppStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -21,22 +25,31 @@ export const Sidebar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <div className="w-20 lg:w-64 h-screen bg-white border-r border-nexus-200 flex flex-col flex-shrink-0 sticky top-0 z-20 transition-all">
-      <div className="p-6 flex items-center justify-center lg:justify-start gap-3">
-        <div className="w-10 h-10 bg-nexus-900 rounded-xl flex items-center justify-center text-white font-bold shadow-md">
-          N
+    <div className="w-64 h-screen bg-white border-r border-nexus-200 flex flex-col flex-shrink-0 sticky top-0 z-20 transition-all shadow-xl lg:shadow-none">
+      <div className="p-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-nexus-900 rounded-xl flex items-center justify-center text-white font-bold shadow-md">
+            N
+            </div>
+            <span className="text-xl font-bold text-nexus-900 tracking-tight">Nexus</span>
         </div>
-        <span className="hidden lg:block text-xl font-bold text-nexus-900 tracking-tight">Nexus</span>
+        {/* Mobile Close Button */}
+        <button onClick={onClose} className="lg:hidden p-2 text-nexus-400 hover:text-nexus-900 rounded-full hover:bg-nexus-50 transition-colors">
+            <X size={20} />
+        </button>
       </div>
 
-      <nav className="flex-1 px-4 mt-6 space-y-2">
+      <nav className="flex-1 px-4 mt-2 space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
           return (
             <button
               key={item.id}
-              onClick={() => navigate(item.path)}
+              onClick={() => {
+                  navigate(item.path);
+                  if (onClose) onClose();
+              }}
               className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${
                 active
                   ? 'bg-nexus-50 text-nexus-900 font-bold border border-nexus-200 shadow-sm'
@@ -44,7 +57,7 @@ export const Sidebar: React.FC = () => {
               }`}
             >
               <Icon size={20} className={active ? 'text-nexus-900' : 'text-nexus-400 group-hover:text-nexus-600'} />
-              <span className="hidden lg:block">{item.label}</span>
+              <span className="">{item.label}</span>
             </button>
           );
         })}
@@ -63,7 +76,7 @@ export const Sidebar: React.FC = () => {
                     <User size={20} />
                 )}
             </div>
-            <div className="hidden lg:block text-left overflow-hidden">
+            <div className="text-left overflow-hidden flex-1 min-w-0">
                 <p className="text-xs font-black text-nexus-900 truncate leading-none mb-1">
                     {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous'}
                 </p>

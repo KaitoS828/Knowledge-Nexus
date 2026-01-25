@@ -40,9 +40,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
             />
 
             {/* Modal */}
-            <div className="relative w-full max-w-4xl bg-white rounded-[40px] shadow-2xl flex flex-col md:flex-row h-[80vh] overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="relative w-full max-w-4xl bg-white rounded-3xl md:rounded-[40px] shadow-2xl flex flex-col md:flex-row h-full md:h-[80vh] overflow-hidden animate-in zoom-in-95 duration-300">
                 {/* Sidebar */}
-                <div className="w-full md:w-64 bg-nexus-50/50 border-r border-nexus-100 p-8 flex flex-col gap-2">
+                <div className="w-full md:w-64 bg-nexus-50/50 border-r border-nexus-100 p-6 md:p-8 flex flex-col gap-2 shrink-0">
                     <h2 className="text-xl font-black text-nexus-900 mb-8 px-2">Settings</h2>
                     
                     {[

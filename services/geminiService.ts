@@ -260,7 +260,7 @@ export const fetchArticleContent = async (url: string): Promise<Partial<Article>
  * Stage 2: Background Analysis
  * Generates Summary, 3 Patterns for Skill Improvement, Tags, etc.
  */
-export const analyzeArticleContent = async (content: string): Promise<Partial<Article>> => {
+export const analyzeArticleContent = async (content: string, preferences?: any): Promise<Partial<Article>> => {
   const analysisPrompt = `
     # 役割
     あなたは、エンジニアの技術力向上を支援する「専属キャリアコーチ」です。

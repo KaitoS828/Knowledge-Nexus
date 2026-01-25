@@ -220,8 +220,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           updatedAt: subscriptionData.updated_at
         } : null,
         usageSummary: usageData ? {
-          totalOperations: usageData.total_operations,
-          totalCostCents: usageData.total_cost_cents
+          totalOperations: (usageData as any).total_operations,
+          totalCostCents: (usageData as any).total_cost_cents
         } : { totalOperations: 0, totalCostCents: 0 }
       }));
     } catch (e) {
@@ -234,7 +234,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: import.meta.env.VITE_APP_URL || window.location.origin
       }
     });
     if (error) alert(error.message);
@@ -244,7 +244,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
-        redirectTo: window.location.origin
+        redirectTo: import.meta.env.VITE_APP_URL || window.location.origin
       }
     });
     if (error) alert(error.message);
@@ -273,7 +273,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
-          emailRedirectTo: window.location.origin
+          emailRedirectTo: import.meta.env.VITE_APP_URL || window.location.origin
         }
       });
 

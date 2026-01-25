@@ -505,10 +505,10 @@ export const ArticleDetail: React.FC = () => {
       </div>
 
       {/* Resizable Container */}
-      <div ref={containerRef} className="flex flex-1 overflow-hidden relative">
+      <div ref={containerRef} className="flex flex-col lg:flex-row flex-1 overflow-hidden relative">
         
         {/* LEFT PANE */}
-        <div style={{ width: `${leftWidth}%` }} className="flex flex-col border-r border-nexus-200 bg-white overflow-hidden relative min-w-[20%] max-w-[80%]">
+        <div style={{ width: window.innerWidth >= 1024 ? `${leftWidth}%` : '100%' }} className="flex flex-col border-b lg:border-b-0 lg:border-r border-nexus-200 bg-white overflow-hidden relative min-w-[20%] max-w-[100%] lg:max-w-[80%] h-1/2 lg:h-auto">
              <div className="flex-1 overflow-y-auto p-8 relative selection:bg-yellow-200 selection:text-nexus-900">
                 <div className="max-w-3xl mx-auto">
                     {/* Tags */}
@@ -607,16 +607,16 @@ export const ArticleDetail: React.FC = () => {
              </div>
         </div>
 
-        {/* DRAG HANDLE */}
+        {/* DRAG HANDLE (Desktop Only) */}
         <div 
           onMouseDown={startResizing}
-          className="w-4 bg-nexus-50 hover:bg-nexus-200 cursor-col-resize flex items-center justify-center z-20 hover:shadow-inner transition-colors border-l border-r border-nexus-200/50"
+          className="hidden lg:flex w-4 bg-nexus-50 hover:bg-nexus-200 cursor-col-resize items-center justify-center z-20 hover:shadow-inner transition-colors border-l border-r border-nexus-200/50"
         >
            <GripVertical size={16} className="text-nexus-300" />
         </div>
 
         {/* RIGHT PANE */}
-        <div className="flex-1 flex flex-col bg-nexus-50 min-w-[20%]">
+        <div className="flex-1 flex flex-col bg-nexus-50 min-w-[20%] h-1/2 lg:h-auto border-t lg:border-t-0 border-nexus-200">
              {/* Top Half: Active Learning Area */}
             <div className="h-1/2 flex flex-col border-b border-nexus-200 bg-white relative">
                 <div className="flex-none p-4 border-b border-nexus-100 flex justify-between items-center bg-nexus-50/50">

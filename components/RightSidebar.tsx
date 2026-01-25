@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { useAppStore } from '../store';
-import { Plus, Search, Loader2, ExternalLink, Sparkles, BookOpen } from 'lucide-react';
+import { Plus, Search, Loader2, ExternalLink, Sparkles, BookOpen, X } from 'lucide-react';
 import { discoverTechArticles } from '../services/geminiService';
 
 interface RightSidebarProps {
   onAnalyzeUrl: (url: string) => void;
+  onClose?: () => void;
 }
 
-export const RightSidebar: React.FC<RightSidebarProps> = ({ onAnalyzeUrl }) => {
+export const RightSidebar: React.FC<RightSidebarProps> = ({ onAnalyzeUrl, onClose }) => {
   const [searchInput, setSearchInput] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<{title: string, url: string, reason: string}[]>([]);
@@ -32,13 +33,19 @@ export const RightSidebar: React.FC<RightSidebarProps> = ({ onAnalyzeUrl }) => {
   };
 
   return (
-    <div className="w-80 border-l border-nexus-200 bg-white flex flex-col h-full overflow-hidden shrink-0">
+    <div className="w-80 border-l border-nexus-200 bg-white flex flex-col h-full overflow-hidden shrink-0 shadow-xl lg:shadow-none">
       
       {/* Header */}
       <div className="p-4 border-b border-nexus-100 bg-nexus-50/50">
-          <h3 className="font-bold text-nexus-800 flex items-center gap-2 text-sm mb-3">
-            <Search size={14} /> 技術情報を探す
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+              <h3 className="font-bold text-nexus-800 flex items-center gap-2 text-sm">
+                <Search size={14} /> 技術情報を探す
+              </h3>
+              {/* Mobile Close Button */}
+              <button onClick={onClose} className="lg:hidden p-1.5 text-nexus-400 hover:text-nexus-900 rounded-full hover:bg-nexus-100 transition-colors">
+                  <X size={16} />
+              </button>
+          </div>
           <form onSubmit={handleSearch} className="relative">
              <input 
                type="text"

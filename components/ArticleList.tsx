@@ -228,7 +228,8 @@ export const ArticleList: React.FC = () => {
   return (
     <div className="flex h-screen bg-nexus-50 overflow-hidden">
       {/* Main Content Area */}
-      <div className="flex-1 h-full overflow-y-auto p-8 text-nexus-900">
+      {/* Main Content Area */}
+      <div className="flex-1 h-full overflow-y-auto p-4 md:p-8 text-nexus-900 pb-20 lg:pb-8">
         <div className="max-w-6xl mx-auto">
             {/* Redesigned Header */}
             <header className="mb-10 flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[32px] border border-nexus-200 shadow-sm overflow-hidden relative">
@@ -258,7 +259,7 @@ export const ArticleList: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
                 {/* AI Knowledge Query (New Section) */}
-                <div className="bg-white rounded-3xl p-8 border border-nexus-200 shadow-sm flex flex-col h-[400px]">
+                <div className="bg-white rounded-3xl p-8 border border-nexus-200 shadow-sm flex flex-col h-80">
                     <div className="flex items-center gap-2 mb-6">
                         <div className="p-2 bg-nexus-900 rounded-lg text-white">
                             <Sparkles size={20} />
@@ -317,7 +318,7 @@ export const ArticleList: React.FC = () => {
                 </div>
 
                 {/* Gap Analysis / Recommendations Widget */}
-                <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden flex flex-col h-[400px]">
+                <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden flex flex-col h-80">
                     <div className="absolute top-0 right-0 p-8 opacity-10">
                         <Compass size={180} className="text-white" />
                     </div>
@@ -490,7 +491,7 @@ export const ArticleList: React.FC = () => {
             </div>
 
             {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 pb-10">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
             {filteredArticles.length === 0 && documents.length === 0 && (
                 <div className="col-span-full text-center py-20 text-nexus-400 border-2 border-dashed border-nexus-200 rounded-2xl bg-white/50">
                 <BookOpen size={48} className="mx-auto mb-4 opacity-30" />
@@ -632,9 +633,6 @@ export const ArticleList: React.FC = () => {
         `}</style>
       </div>
 
-      {/* Right Sidebar */}
-      <RightSidebar onAnalyzeUrl={processUrl} />
-      
       <UpgradeModal 
         isOpen={showUpgradeModal} 
         onClose={() => setShowUpgradeModal(false)}
