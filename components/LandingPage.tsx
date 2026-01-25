@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '../store';
-import { Sparkles, Brain, Zap, Share2, ArrowRight, Layout, TrendingUp, User, Github } from 'lucide-react';
+import { Sparkles, Brain, Zap, Share2, ArrowRight, Layout, TrendingUp, User, Github, Mail } from 'lucide-react';
+import { EmailAuthModal } from './EmailAuthModal';
 
 export const LandingPage: React.FC = () => {
-  const { signInWithGoogle, signInWithGitHub, signInAsGuest } = useAppStore();
+  const { signInWithGoogle, signInWithGitHub, signInAsGuest, signUpWithEmail, verifyOTP, resendOTP } = useAppStore();
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-nexus-50 text-nexus-900 font-sans selection:bg-nexus-900 selection:text-white">
@@ -63,6 +65,15 @@ export const LandingPage: React.FC = () => {
             </button>
 
             <button
+                onClick={() => setIsEmailModalOpen(true)}
+                className="group relative inline-flex items-center justify-center px-8 py-4 font-bold text-white transition-all duration-200 bg-blue-600 font-lg rounded-xl hover:bg-blue-700 hover:shadow-lg hover:-translate-y-0.5 w-full md:w-auto"
+            >
+                <Mail size={18} className="mr-3" />
+                メールで始める
+                <ArrowRight className="ml-2 transition-transform group-hover:translate-x-1" size={18} />
+            </button>
+
+            <button
                 onClick={signInAsGuest}
                 className="group inline-flex items-center justify-center px-8 py-4 font-bold text-nexus-600 bg-white border border-nexus-200 rounded-xl hover:bg-nexus-50 hover:text-nexus-900 transition-all w-full md:w-auto"
             >
@@ -98,14 +109,29 @@ export const LandingPage: React.FC = () => {
       <footer className="py-12 bg-nexus-50 text-center text-nexus-400 text-sm">
         <p>&copy; 2024 Knowledge Nexus. All rights reserved.</p>
       </footer>
+
+      {/* Email Auth Modal */}
+      <EmailAuthModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+        onSignUp={signUpWithEmail}
+        onVerify={verifyOTP}
+        onResend={resendOTP}
+      />
     </div>
   );
 };
 
-const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => (
-    <div className="flex flex-col items-start text-left p-6 rounded-2xl hover:bg-nexus-50 transition-colors">
-        <div className="mb-4 p-3 bg-white rounded-xl border border-nexus-200 shadow-sm">{icon}</div>
-        <h3 className="text-xl font-bold text-nexus-900 mb-3">{title}</h3>
-        <p className="text-nexus-600 leading-relaxed">{description}</p>
-    </div>
+interface FeatureCardProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+const FeatureCard: React.FC<FeatureCardProps> = ({ icon, title, description }) => (
+  <div className="flex flex-col items-center text-center">
+    <div className="mb-6 p-4 bg-nexus-50 rounded-2xl">{icon}</div>
+    <h3 className="text-xl font-bold text-nexus-900 mb-3">{title}</h3>
+    <p className="text-nexus-500 leading-relaxed">{description}</p>
+  </div>
 );

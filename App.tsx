@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { AppProvider, useAppStore } from './store';
-import { Outlet, useNavigate, useParams } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { LandingPage } from './components/LandingPage';
 import { Onboarding } from './components/Onboarding';
@@ -9,7 +9,14 @@ import { Loader2 } from 'lucide-react';
 const MainLayout: React.FC = () => {
   const { user, isOnboarded, isLoading } = useAppStore();
   const navigate = useNavigate();
-  const params = useParams();
+  const location = useLocation();
+
+  // ログイン済みかつオンボード済みのユーザーが "/" にアクセスした場合、ダッシュボードにリダイレクト
+  useEffect(() => {
+    if (!isLoading && user && isOnboarded && location.pathname === '/') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, isOnboarded, isLoading, location.pathname, navigate]);
 
   if (isLoading) {
     return (
@@ -33,7 +40,7 @@ const MainLayout: React.FC = () => {
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-nexus-50">
       <Sidebar />
-      <main className="flex-1 h-full relative">
+      <main className="flex-1 h-full relative overflow-y-auto">
         <Outlet />
       </main>
     </div>

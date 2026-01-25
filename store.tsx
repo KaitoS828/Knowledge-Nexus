@@ -45,6 +45,9 @@ interface AppContextType extends AppState {
   signInWithGitHub: () => Promise<void>;
   signInAsGuest: () => Promise<void>;
   signOut: () => Promise<void>;
+  signUpWithEmail: (email: string) => Promise<void>;
+  verifyOTP: (email: string, token: string) => Promise<void>;
+  resendOTP: (email: string) => Promise<void>;
   addArticle: (article: Article) => Promise<void>;
   deleteArticle: (id: string) => Promise<void>;
   updateArticleStatus: (id: string, status: Article['status']) => Promise<void>;
@@ -245,6 +248,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+
+  const signUpWithEmail = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: window.location.origin
+        }
+      });
+
+      if (error) {
+        throw new Error(error.message || 'メール送信に失敗しました');
+      }
+    } catch (err: any) {
+      throw new Error(err.message || 'メール送信に失敗しました');
+    }
+  };
+
+  const verifyOTP = async (email: string, token: string) => {
+    try {
+      const { data, error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'email'
+      });
+
+      if (error) {
+        throw new Error(error.message || 'OTP検証に失敗しました');
+      }
+
+      if (data.user) {
+        await loadUserData(data.user.id);
+      }
+    } catch (err: any) {
+      throw new Error(err.message || 'OTP検証に失敗しました');
+    }
+  };
+
+  const resendOTP = async (email: string) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email
+      });
+
+      if (error) {
+        throw new Error(error.message || 'メール再送信に失敗しました');
+      }
+    } catch (err: any) {
+      throw new Error(err.message || 'メール再送信に失敗しました');
+    }
+  };
   const logActivity = async () => {
     if (!state.user) return;
     const today = new Date().toISOString().split('T')[0];
@@ -700,6 +755,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       signInWithGitHub,
       signInAsGuest,
       signOut,
+      signUpWithEmail,
+      verifyOTP,
+      resendOTP,
       addArticle,
       deleteArticle,
       updateArticleStatus,
