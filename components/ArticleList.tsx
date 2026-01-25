@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store';
 import { Article } from '../types';
 import { Plus, Search, BookOpen, CheckCircle, Clock, Flame, Trophy, Hash, Loader2, Trash2, Compass, ArrowRight, Sparkles, Upload, Link, FileText } from 'lucide-react';
-import { fetchArticleContent, analyzeArticleContent, getLearningRecommendations } from '../services/geminiService';
+import { fetchArticleContent, analyzeArticleContent, getLearningRecommendations, sendChatMessage } from '../services/geminiService';
 import { processDocument } from '../services/pdfService';
 import { RightSidebar } from './RightSidebar';
 
@@ -47,7 +47,7 @@ const ActivityHeatmap = () => {
 
 export const ArticleList: React.FC = () => {
   const navigate = useNavigate();
-  const { articles, addArticle, deleteArticle, updateArticle, activityLogs, brain, documents, addDocument, deleteDocument } = useAppStore();
+  const { articles, addArticle, deleteArticle, updateArticle, brain, documents, addDocument, deleteDocument, subscription, preferences } = useAppStore();
   const [urlInput, setUrlInput] = useState('');
   const [isFetching, setIsFetching] = useState(false);
   const [filter, setFilter] = useState<'all' | 'new' | 'reading' | 'practice'>('all');
@@ -60,8 +60,33 @@ export const ArticleList: React.FC = () => {
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [isAnalyzingRecs, setIsAnalyzingRecs] = useState(false);
 
-  const totalActivities = activityLogs.reduce((acc, log) => acc + log.count, 0);
-  const level = Math.floor(totalActivities / 5) + 1;
+  // AI Knowledge Query State
+  const [queryInput, setQueryInput] = useState('');
+  const [queryAnswer, setQueryAnswer] = useState<string | null>(null);
+  const [isQuerying, setIsQuerying] = useState(false);
+
+  const isPro = subscription?.planType === 'pro';
+
+  const handleKnowledgeQuery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!queryInput.trim()) return;
+
+    setIsQuerying(true);
+    try {
+      const response = await sendChatMessage(
+        queryInput,
+        'advisor',
+        '', // Combined article context isn't available here, prioritize brain
+        brain.content,
+        preferences
+      );
+      setQueryAnswer(response);
+    } catch (err) {
+      setQueryAnswer("回答の生成中にエラーが発生しました。");
+    } finally {
+      setIsQuerying(false);
+    }
+  };
 
   const processUrl = async (url: string) => {
     if (!url) return;
@@ -192,67 +217,140 @@ export const ArticleList: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 h-full overflow-y-auto p-8 text-nexus-900">
         <div className="max-w-6xl mx-auto">
-            {/* Header */}
-            <header className="mb-10 flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 bg-white p-6 rounded-3xl border border-nexus-200 shadow-sm">
-            <div>
-                <h1 className="text-3xl font-bold text-nexus-900 mb-2 tracking-tight">ナレッジ・フィード</h1>
-                <p className="text-nexus-500">インプットを「使える知識」へ変換する場所。</p>
-            </div>
-            <div className="flex items-center gap-6">
-                <div className="text-right border-r border-nexus-200 pr-6">
-                    <div className="text-xs text-nexus-500 font-bold mb-1 flex items-center justify-end gap-1">
-                        <Trophy size={14} className="text-yellow-500" /> DEV LEVEL
+            {/* Redesigned Header */}
+            <header className="mb-10 flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[32px] border border-nexus-200 shadow-sm overflow-hidden relative">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-nexus-50/50 rounded-full blur-3xl -z-10 -translate-y-1/2 translate-x-1/3"></div>
+                
+                <div className="flex-1">
+                    <div className="flex items-center gap-3 mb-2">
+                        <h1 className="text-3xl font-black text-nexus-900 tracking-tight">マイ・インテリジェンス</h1>
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${isPro ? 'bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-700 border border-amber-200' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
+                            {isPro ? 'Pro Member' : 'Free Plan'}
+                        </span>
                     </div>
-                    <div className="text-3xl font-black text-nexus-900 font-mono leading-none">
-                        Lv.{level}
-                    </div>
-                </div>
-                <ActivityHeatmap />
-            </div>
-            </header>
-
-            {/* Gap Analysis / Recommendations Widget */}
-            <div className="mb-10 bg-gradient-to-r from-indigo-900 to-indigo-800 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
-                <div className="absolute top-0 right-0 p-8 opacity-10">
-                    <Compass size={140} className="text-white" />
+                    <p className="text-nexus-500 font-medium">個人の知識を資産に変える、あなたのプライベートナレッジスペース。</p>
                 </div>
                 
-                <div className="relative z-10">
-                    <div className="flex justify-between items-center mb-4">
-                        <h3 className="text-xl font-bold flex items-center gap-2">
-                            <Compass size={24} className="text-indigo-300" /> ネクスト・ステップ提案
-                        </h3>
-                        {!recommendation && (
-                            <button 
-                                onClick={handleGetRecommendations}
-                                disabled={isAnalyzingRecs || articles.length === 0}
-                                className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm disabled:opacity-50"
-                            >
-                                {isAnalyzingRecs ? <Loader2 size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                                Brainを分析して提案
-                            </button>
+                {!isPro && (
+                  <button 
+                    onClick={() => navigate('/pricing')}
+                    className="flex items-center gap-3 px-6 py-4 bg-nexus-900 text-white rounded-2xl font-black text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all group"
+                  >
+                    <Sparkles size={18} className="text-yellow-400" />
+                    Proにアップグレード
+                    <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                  </button>
+                )}
+            </header>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+                {/* AI Knowledge Query (New Section) */}
+                <div className="bg-white rounded-3xl p-8 border border-nexus-200 shadow-sm flex flex-col h-[400px]">
+                    <div className="flex items-center gap-2 mb-6">
+                        <div className="p-2 bg-nexus-900 rounded-lg text-white">
+                            <Sparkles size={20} />
+                        </div>
+                        <h3 className="text-xl font-bold text-nexus-900">自分の過去記録への質問</h3>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto mb-6 space-y-4 pr-2 custom-scrollbar">
+                        {!queryAnswer && !isQuerying && (
+                            <div className="h-full flex flex-col items-center justify-center text-center px-6">
+                                <Search size={40} className="text-nexus-200 mb-4" />
+                                <p className="text-nexus-400 text-sm font-medium leading-relaxed">
+                                    これまで保存した記事やBrainの内容について<br/>
+                                    AIに質問してみましょう。
+                                </p>
+                            </div>
+                        )}
+                        {queryAnswer && (
+                            <div className="bg-nexus-50 rounded-2xl p-6 border border-nexus-100 animate-in fade-in slide-in-from-bottom-2">
+                                <div className="prose prose-sm font-medium text-nexus-700 leading-relaxed max-w-none">
+                                    <ReactMarkdown>{queryAnswer}</ReactMarkdown>
+                                </div>
+                                <button 
+                                    onClick={() => setQueryAnswer(null)}
+                                    className="mt-6 text-[10px] font-black text-nexus-400 uppercase tracking-widest hover:text-nexus-900 transition-colors"
+                                >
+                                    回答をリセット
+                                </button>
+                            </div>
+                        )}
+                        {isQuerying && (
+                            <div className="flex flex-col items-center justify-center h-full gap-3">
+                                <Loader2 className="animate-spin text-nexus-900" size={32} />
+                                <p className="text-nexus-500 font-bold text-sm animate-pulse">知識を整理しています...</p>
+                            </div>
                         )}
                     </div>
+
+                    <form onSubmit={handleKnowledgeQuery} className="relative">
+                        <input
+                            type="text"
+                            value={queryInput}
+                            onChange={(e) => setQueryInput(e.target.value)}
+                            placeholder="例: 先月学んだReactの最適化について教えて"
+                            disabled={isQuerying}
+                            className="w-full bg-nexus-50 border border-nexus-100 rounded-2xl px-6 py-4 pr-16 text-nexus-900 font-medium focus:outline-none focus:ring-2 focus:ring-nexus-900 transition-all placeholder-nexus-300"
+                        />
+                        <button
+                            type="submit"
+                            disabled={!queryInput.trim() || isQuerying}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-nexus-900 text-white rounded-xl hover:bg-black disabled:opacity-50 transition-all shadow-md active:scale-95"
+                        >
+                            <ArrowRight size={20} />
+                        </button>
+                    </form>
+                </div>
+
+                {/* Gap Analysis / Recommendations Widget */}
+                <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden flex flex-col h-[400px]">
+                    <div className="absolute top-0 right-0 p-8 opacity-10">
+                        <Compass size={180} className="text-white" />
+                    </div>
                     
-                    {recommendation ? (
-                        <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10 text-indigo-50 leading-relaxed text-sm animate-in fade-in slide-in-from-top-2">
-                            <ReactMarkdown 
-                                components={{
-                                    h3: ({node, ...props}: any) => <h3 className="text-lg font-bold mt-4 mb-2 text-white" {...props} />,
-                                    strong: ({node, ...props}: any) => <strong className="text-indigo-200 font-bold" {...props} />,
-                                    ul: ({node, ...props}: any) => <ul className="list-disc pl-5 space-y-1 my-2" {...props} />,
-                                }}
-                            >
-                                {recommendation}
-                            </ReactMarkdown>
-                            <button onClick={() => setRecommendation(null)} className="mt-4 text-xs text-indigo-300 hover:text-white underline">閉じる</button>
+                    <div className="relative z-10 flex flex-col h-full">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold flex items-center gap-2">
+                                <Compass size={24} className="text-indigo-300" /> 次に学ぶべきことは？
+                            </h3>
+                            {!recommendation && (
+                                <button 
+                                    onClick={handleGetRecommendations}
+                                    disabled={isAnalyzingRecs || articles.length === 0}
+                                    className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs disabled:opacity-50 backdrop-blur-md"
+                                >
+                                    {isAnalyzingRecs ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
+                                    解析を開始
+                                </button>
+                            )}
                         </div>
-                    ) : (
-                        <p className="text-indigo-200 text-sm max-w-xl">
-                            あなたのBrain（知識ベース）と、最近読んだ記事のタグをAIが分析し、
-                            「次に学ぶべき技術」や「知識の空白」を提案します。
-                        </p>
-                    )}
+                        
+                        <div className="flex-1 overflow-y-auto custom-scrollbar-white pr-2">
+                            {recommendation ? (
+                                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-indigo-50 leading-relaxed text-sm animate-in fade-in slide-in-from-top-2">
+                                    <ReactMarkdown 
+                                        components={{
+                                            h3: ({node, ...props}: any) => <h3 className="text-lg font-bold mt-4 mb-2 text-white" {...props} />,
+                                            strong: ({node, ...props}: any) => <strong className="text-indigo-200 font-bold" {...props} />,
+                                            ul: ({node, ...props}: any) => <ul className="list-disc pl-5 space-y-1 my-2" {...props} />,
+                                        }}
+                                    >
+                                        {recommendation}
+                                    </ReactMarkdown>
+                                    <button onClick={() => setRecommendation(null)} className="mt-6 text-[10px] font-black text-indigo-300 hover:text-white uppercase tracking-widest underline decoration-2 underline-offset-4 transition-colors">解析結果をクリア</button>
+                                </div>
+                            ) : (
+                                <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-60">
+                                    <Sparkles size={48} className="text-indigo-300" />
+                                    <p className="text-indigo-100 text-sm max-w-xs font-medium leading-relaxed">
+                                        あなたのBrainの状態をAIが深層分析し、<br/>
+                                        最適な技術トピックをレコメンドします。
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
 
