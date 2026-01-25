@@ -11,6 +11,7 @@ import { LearningDiary } from './components/LearningDiary';
 import { PricingPage } from './components/PricingPage';
 import { Settings } from './components/Settings';
 import { Onboarding } from './components/Onboarding';
+import { ReflectionPage } from './components/ReflectionPage';
 
 export const router = createBrowserRouter([
   {
@@ -48,6 +49,10 @@ export const router = createBrowserRouter([
       {
         path: 'diary',
         element: <LearningDiary />,
+      },
+      {
+        path: 'reflection',
+        element: <ReflectionPage />,
       },
       {
         path: 'pricing',

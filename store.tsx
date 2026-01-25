@@ -45,7 +45,9 @@ interface AppContextType extends AppState {
   signInWithGitHub: () => Promise<void>;
   signInAsGuest: () => Promise<void>;
   signOut: () => Promise<void>;
-  signUpWithEmail: (email: string) => Promise<void>;
+  signUp: (email: string, password: string) => Promise<void>; // Basic Auth
+  signIn: (email: string, password: string) => Promise<void>; // Basic Auth
+  signUpWithEmail: (email: string) => Promise<void>; // OTP (Legacy/Alternative)
   verifyOTP: (email: string, token: string) => Promise<void>;
   resendOTP: (email: string) => Promise<void>;
   addArticle: (article: Article) => Promise<void>;
@@ -72,6 +74,7 @@ interface AppContextType extends AppState {
   upgradeToProMonthly: () => Promise<void>;
   upgradeToProYearly: () => Promise<void>;
   cancelSubscription: () => Promise<void>;
+  updateSubscriptionStatus: (sessionId: string) => Promise<void>;
   checkUsageLimit: () => Promise<boolean>;
   checkStorageLimit: () => boolean;
   logUsage: (operationType: string, inputTokens: number, outputTokens: number, resourceId?: string) => Promise<void>;
@@ -160,7 +163,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const { data: documentsData } = await supabase.from('documents').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
 
       // Fetch Subscription
-      const { data: subscriptionData } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).single();
+      const { data: subscriptionData, error: subError } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle();
+
 
       // Fetch Current Month Usage
       const { data: usageData } = await supabase.rpc('get_current_month_usage', { p_user_id: user.id }).single();
@@ -268,6 +272,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
 
+  const signUp = async (email: string, password: string): Promise<void> => {
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: import.meta.env.VITE_APP_URL || window.location.origin
+        }
+      });
+
+      if (error) throw error;
+      
+      // If auto-confirm is enabled, session might be established immediately.
+      // But typically for email signup, we wait for confirmation.
+      // However, if we just want to notify user, we don't need to do anything else here.
+    } catch (err: any) {
+      throw new Error(err.message || 'アカウント作成に失敗しました');
+    }
+  };
+
+  const signIn = async (email: string, password: string): Promise<void> => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+         await loadUserData(data.user.id);
+      }
+    } catch (err: any) {
+      throw new Error(err.message || 'ログインに失敗しました');
+    }
+  };
+
   const signUpWithEmail = async (email: string) => {
     try {
       const { error } = await supabase.auth.signInWithOtp({
@@ -307,9 +348,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resendOTP = async (email: string) => {
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email
+      // For email OTP/Magic Link, "resend" is often best handled by just requesting sign-in again.
+      // supabase.auth.resend is primarily for email confirmation flows, not necessarily OTP login flows.
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: import.meta.env.VITE_APP_URL || window.location.origin
+        }
       });
 
       if (error) {
@@ -595,26 +640,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // ========== Subscription Functions ==========
 
+
   const upgradeToProMonthly = async () => {
     if (!state.user || state.user.isGuest) {
       throw new Error('ログインが必要です');
     }
 
-    // TODO: Implement Stripe checkout
-    // For now, just update the database directly (for testing)
-    const { error } = await supabase.from('subscriptions').upsert({
-      user_id: state.user.id,
-      plan_type: 'pro',
-      billing_cycle: 'monthly',
-      status: 'active',
-      current_period_start: new Date().toISOString(),
-      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-    });
+    try {
+      // Call Supabase Edge Function to create checkout session
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: { cycle: 'monthly' }
+      });
 
-    if (error) throw error;
+      if (error) throw error;
+      if (!data?.url) throw new Error('Checkout URL not found');
 
-    // Reload user data to get updated subscription
-    await loadUserData(state.user);
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (err: any) {
+      console.error('Upgrade failed:', err);
+      throw new Error(err.message || '決済の開始に失敗しました');
+    }
   };
 
   const upgradeToProYearly = async () => {
@@ -622,18 +668,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       throw new Error('ログインが必要です');
     }
 
-    // TODO: Implement Stripe checkout
-    const { error } = await supabase.from('subscriptions').upsert({
-      user_id: state.user.id,
-      plan_type: 'pro',
-      billing_cycle: 'yearly',
-      status: 'active',
-      current_period_start: new Date().toISOString(),
-      current_period_end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
-    });
+    try {
+      // Call Supabase Edge Function to create checkout session
+      const { data, error } = await supabase.functions.invoke('create-checkout-session', {
+        body: { cycle: 'yearly' }
+      });
 
-    if (error) throw error;
-    await loadUserData(state.user);
+      if (error) throw error;
+      if (!data?.url) throw new Error('Checkout URL not found');
+
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    } catch (err: any) {
+      console.error('Upgrade failed:', err);
+      throw new Error(err.message || '決済の開始に失敗しました');
+    }
   };
 
   const cancelSubscription = async () => {
@@ -647,6 +696,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       .eq('user_id', state.user.id);
 
     if (error) throw error;
+    await loadUserData(state.user);
+  };
+
+  // Called after successful Stripe redirect
+  const updateSubscriptionStatus = async (sessionId: string) => {
+    if (!state.user || state.user.isGuest) return;
+
+    // Update DB to Pro
+    const { error } = await supabase.from('subscriptions').upsert({
+      user_id: state.user.id,
+      plan_type: 'pro',
+      status: 'active',
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      stripe_customer_id: sessionId
+    }, { onConflict: 'user_id' });
+
+    if (error) {
+      console.error('Failed to update subscription:', error);
+      return;
+    }
+
     await loadUserData(state.user);
   };
 
@@ -774,6 +845,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       signInWithGitHub,
       signInAsGuest,
       signOut,
+      signUp,
+      signIn,
       signUpWithEmail,
       verifyOTP,
       resendOTP,
@@ -796,6 +869,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       upgradeToProMonthly,
       upgradeToProYearly,
       cancelSubscription,
+      updateSubscriptionStatus,
       checkUsageLimit,
       checkStorageLimit,
       logUsage,

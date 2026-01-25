@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { LandingPage } from './components/LandingPage';
 import { Onboarding } from './components/Onboarding';
 import { ThemeManager } from './components/ThemeManager';
+import { ReflectionPage } from './components/ReflectionPage';
 import { Loader2 } from 'lucide-react';
 
 import { MainLayout } from './components/MainLayout';

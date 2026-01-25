@@ -401,7 +401,7 @@ export const generateStepByStepGuide = async (articleContent: string, patternTit
 
 export const sendChatMessage = async (
   message: string, 
-  mode: 'article' | 'advisor', 
+  mode: 'article' | 'advisor' | 'brain', 
   articleContent: string, 
   brainContent: string,
   preferences?: any
@@ -420,6 +420,8 @@ export const sendChatMessage = async (
   let systemInstruction = "";
   if (mode === 'article') {
     systemInstruction = `${personaPrompts[persona as keyof typeof personaPrompts]}\n記事のコンテキストのみに基づいて回答してください: \n\n${articleContent}\n\n${langPrompt}`;
+  } else if (mode === 'brain') {
+    systemInstruction = `${personaPrompts[persona as keyof typeof personaPrompts]}\nユーザーの過去の全学習記録（Brain Context）に基づいて、質問に答えてください。過去の知識から関連する情報を引き出し、繋がりを意識して回答してください。\n\nBrain Context:\n${brainContent}\n\n${langPrompt}`;
   } else {
     systemInstruction = `${personaPrompts[persona as keyof typeof personaPrompts]}\nBrain ContextとArticle Contextを比較し助言してください。\n\n${langPrompt}`;
   }

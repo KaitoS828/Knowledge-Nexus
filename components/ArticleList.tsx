@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+// Import useEffect from React
+import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../store';
 import { Article } from '../types';
 import { Plus, Search, BookOpen, CheckCircle, Clock, Flame, Trophy, Hash, Loader2, Trash2, Compass, ArrowRight, Sparkles, Upload, Link, FileText } from 'lucide-react';
@@ -48,7 +49,23 @@ const ActivityHeatmap = () => {
 
 export const ArticleList: React.FC = () => {
   const navigate = useNavigate();
-  const { articles, addArticle, deleteArticle, updateArticle, brain, documents, addDocument, deleteDocument, subscription, preferences } = useAppStore();
+  const location = useLocation();
+  const { articles, addArticle, deleteArticle, updateArticle, brain, documents, addDocument, deleteDocument, subscription, preferences, updateSubscriptionStatus } = useAppStore();
+  
+  // Check for Stripe session_id on mount
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const sessionId = searchParams.get('session_id');
+    
+    if (sessionId) {
+      updateSubscriptionStatus(sessionId).then(() => {
+        alert('Proプランへのアップグレードが完了しました！ありがとうございます。');
+        window.location.href = '/dashboard';
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]); // location.searchのみを監視
+
   const [urlInput, setUrlInput] = useState('');
   const [isFetching, setIsFetching] = useState(false);
   const [filter, setFilter] = useState<'all' | 'new' | 'reading' | 'practice'>('all');
@@ -71,6 +88,7 @@ export const ArticleList: React.FC = () => {
   const [isQuerying, setIsQuerying] = useState(false);
 
   const isPro = subscription?.planType === 'pro';
+
 
   const handleKnowledgeQuery = async (e: React.FormEvent) => {
     e.preventDefault();

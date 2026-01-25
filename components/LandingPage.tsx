@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store';
-import { Sparkles, Brain, Zap, Share2, ArrowRight, Layout, TrendingUp, User, Github, Mail, Shield, CheckCircle2, ChevronRight, Search, GraduationCap } from 'lucide-react';
-import { EmailAuthModal } from './EmailAuthModal';
-import { AuthOptionsModal } from './AuthOptionsModal';
+import { Zap, Share2, ArrowRight, Layout, TrendingUp, User, Github, Mail, Shield, CheckCircle2, ChevronRight, Search, GraduationCap } from 'lucide-react';
+import { AuthModal } from './AuthModal';
 
 export const LandingPage: React.FC = () => {
-  const { signInWithGoogle, signInWithGitHub, signInAsGuest, signUpWithEmail, verifyOTP, resendOTP } = useAppStore();
-  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-  const [isAuthOptionsOpen, setIsAuthOptionsOpen] = useState(false);
+  const { signInWithGoogle, signInWithGitHub, signInAsGuest } = useAppStore();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
 
   // Auto-slide features (optional visual flair)
@@ -36,13 +34,13 @@ export const LandingPage: React.FC = () => {
 
             <div className="flex items-center gap-4">
                 <button 
-                    onClick={() => setIsAuthOptionsOpen(true)}
+                    onClick={() => setIsAuthModalOpen(true)}
                     className="hidden sm:block text-sm font-black text-nexus-500 hover:text-nexus-900 transition-colors uppercase tracking-widest"
                 >
                     ログイン
                 </button>
                 <button 
-                    onClick={() => setIsAuthOptionsOpen(true)}
+                    onClick={() => setIsAuthModalOpen(true)}
                     className="px-6 py-3 bg-nexus-900 text-white font-black text-sm rounded-xl hover:bg-black transition-all hover:shadow-xl hover:-translate-y-0.5 uppercase tracking-widest"
                 >
                     無料で始める
@@ -72,7 +70,7 @@ export const LandingPage: React.FC = () => {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
                 <button
-                    onClick={() => setIsAuthOptionsOpen(true)}
+                    onClick={() => setIsAuthModalOpen(true)}
                     className="group relative px-12 py-6 bg-nexus-900 text-white rounded-[24px] font-black text-xl hover:bg-black transition-all hover:shadow-2xl hover:scale-[1.03] active:scale-[0.98] w-full sm:w-auto overflow-hidden"
                 >
                     <div className="relative z-10 flex items-center gap-3">
@@ -211,7 +209,7 @@ export const LandingPage: React.FC = () => {
             </h2>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <button
-                    onClick={() => setIsAuthOptionsOpen(true)}
+                    onClick={() => setIsAuthModalOpen(true)}
                     className="px-12 py-6 bg-white text-black rounded-2xl font-black text-xl hover:bg-nexus-100 transition-all hover:shadow-2xl hover:scale-105 active:scale-95"
                 >
                     無料で体験する
@@ -277,19 +275,10 @@ export const LandingPage: React.FC = () => {
         </div>
       </footer>
 
-      {/* Unified Auth Flow Modals */}
-      <AuthOptionsModal 
-        isOpen={isAuthOptionsOpen} 
-        onClose={() => setIsAuthOptionsOpen(false)}
-        onShowEmailAuth={() => setIsEmailModalOpen(true)}
-      />
-
-      <EmailAuthModal
-        isOpen={isEmailModalOpen}
-        onClose={() => setIsEmailModalOpen(false)}
-        onSignUp={signUpWithEmail}
-        onVerify={verifyOTP}
-        onResend={resendOTP}
+      {/* Unified Auth Flow Modal */}
+      <AuthModal
+         isOpen={isAuthModalOpen}
+         onClose={() => setIsAuthModalOpen(false)}
       />
     </div>
   );

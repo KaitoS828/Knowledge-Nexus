@@ -49,21 +49,21 @@ export const MainLayout: React.FC = () => {
     const showRightSidebar = location.pathname === '/dashboard';
 
     return (
-        <div className="flex h-screen w-screen overflow-hidden bg-nexus-50">
+        <div className="flex h-screen w-screen overflow-hidden bg-nexus-50 dark:bg-nexus-900">
             {/* Mobile Header (Only visible on mobile) */}
-            <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-nexus-200 z-30 flex items-center justify-between px-4">
+            <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-white dark:bg-nexus-800 border-b border-nexus-200 dark:border-nexus-700 z-30 flex items-center justify-between px-4">
                 <button 
                     onClick={() => setIsSidebarOpen(true)}
-                    className="p-2 -ml-2 text-nexus-600 hover:bg-nexus-50 rounded-lg"
+                    className="p-2 -ml-2 text-nexus-600 dark:text-nexus-400 hover:bg-nexus-50 dark:hover:bg-nexus-700 rounded-lg"
                 >
                     <Menu size={24} />
                 </button>
-                <span className="text-lg font-black text-nexus-900 tracking-tight">Nexus</span>
+                <span className="text-lg font-black text-nexus-900 dark:text-nexus-100 tracking-tight">Nexus</span>
                 
                 {showRightSidebar ? (
                     <button 
                         onClick={() => setIsRightSidebarOpen(true)}
-                        className="p-2 -mr-2 text-nexus-600 hover:bg-nexus-50 rounded-lg"
+                        className="p-2 -mr-2 text-nexus-600 dark:text-nexus-400 hover:bg-nexus-50 dark:hover:bg-nexus-700 rounded-lg"
                     >
                         <Search size={24} />
                     </button>

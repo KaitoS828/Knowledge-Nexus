@@ -43,8 +43,8 @@ Stripeダッシュボード → **商品** → **新しい商品**
   - **通貨**: JPY（日本円）
 
 作成後、各料金のIDをメモしてください。
-- Monthly Price ID: `price_xxxxxxxxxxxxx`
-- Yearly Price ID: `price_xxxxxxxxxxxxx`
+- Monthly Price ID: `price_xxxxxxxxxxxxx` (月額プランのIDも同様に確認してください)
+- Yearly Price ID: `price_1StSzdRv1KVIBqGOOpbcT1EZ`
 
 ### ステップ 5: 環境変数に料金IDを追加
 `.env.local` に追加：
