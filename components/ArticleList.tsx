@@ -7,6 +7,7 @@ import { Plus, Search, BookOpen, CheckCircle, Clock, Flame, Trophy, Hash, Loader
 import { fetchArticleContent, analyzeArticleContent, getLearningRecommendations, sendChatMessage } from '../services/geminiService';
 import { processDocument } from '../services/pdfService';
 import { RightSidebar } from './RightSidebar';
+import { UpgradeModal } from './UpgradeModal';
 
 // Simple Heatmap Component
 const ActivityHeatmap = () => {
@@ -60,6 +61,10 @@ export const ArticleList: React.FC = () => {
   const [recommendation, setRecommendation] = useState<string | null>(null);
   const [isAnalyzingRecs, setIsAnalyzingRecs] = useState(false);
 
+  // Upgrade Modal State
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [upgradeMessage, setUpgradeMessage] = useState<string | undefined>(undefined);
+
   // AI Knowledge Query State
   const [queryInput, setQueryInput] = useState('');
   const [queryAnswer, setQueryAnswer] = useState<string | null>(null);
@@ -111,8 +116,12 @@ export const ArticleList: React.FC = () => {
           updateArticle(newId, analysis);
       });
 
-    } catch (err) {
-      alert("記事の取得に失敗しました");
+    } catch (err: any) {
+      if (err.message === 'Storage limit reached') {
+        setShowUpgradeModal(true);
+      } else {
+        alert("記事の取得に失敗しました");
+      }
       setIsFetching(false);
     }
   };
@@ -163,9 +172,13 @@ export const ArticleList: React.FC = () => {
       });
 
       alert(`「${file.name}」の分析が完了しました`);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      alert('アップロードまたは分析に失敗しました。Gemini API Key設定を確認してください');
+      if (e.message === 'Storage limit reached') {
+        setShowUpgradeModal(true);
+      } else {
+        alert('アップロードまたは分析に失敗しました。Gemini API Key設定を確認してください');
+      }
     } finally {
       setIsUploadingPDF(false);
     }
@@ -395,10 +408,19 @@ export const ArticleList: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isFetching}
-                    className="bg-nexus-900 hover:bg-nexus-800 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-colors disabled:opacity-50 shadow-md"
+                    className="bg-nexus-900 hover:bg-nexus-800 text-white font-bold px-6 py-3 rounded-xl flex items-center gap-2 transition-colors disabled:opacity-50 shadow-md whitespace-nowrap"
                   >
-                    {isFetching ? <Loader2 className="animate-spin" /> : <Plus size={20} />}
-                    追加して読む
+                    {isFetching ? (
+                      <>
+                        <Loader2 className="animate-spin" />
+                        <span className="text-xs">追加中(数十秒かかる場合があります)</span>
+                      </>
+                    ) : (
+                      <>
+                        <Plus size={20} />
+                        追加して読む
+                      </>
+                    )}
                   </button>
                 </form>
               )}
@@ -427,6 +449,7 @@ export const ArticleList: React.FC = () => {
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="animate-spin text-nexus-accent" size={40} />
                       <p className="text-nexus-600 font-bold">PDF を分析中...</p>
+                      <p className="text-xs text-nexus-400 font-medium">これには数十秒かかるおそれがあります</p>
                     </div>
                   ) : (
                     <>
@@ -611,6 +634,12 @@ export const ArticleList: React.FC = () => {
 
       {/* Right Sidebar */}
       <RightSidebar onAnalyzeUrl={processUrl} />
+      
+      <UpgradeModal 
+        isOpen={showUpgradeModal} 
+        onClose={() => setShowUpgradeModal(false)}
+        message={upgradeMessage}
+      />
     </div>
   );
 };

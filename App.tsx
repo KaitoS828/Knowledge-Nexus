@@ -4,6 +4,7 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { LandingPage } from './components/LandingPage';
 import { Onboarding } from './components/Onboarding';
+import { ThemeManager } from './components/ThemeManager';
 import { Loader2 } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
@@ -11,10 +12,16 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // ログイン済みかつオンボード済みのユーザーが "/" にアクセスした場合、ダッシュボードにリダイレクト
+  // 認証状態に応じたリダイレクト制御
   useEffect(() => {
-    if (!isLoading && user && isOnboarded && location.pathname === '/') {
+    if (isLoading) return;
+
+    if (user && isOnboarded && location.pathname === '/') {
+      // ログイン済み -> ダッシュボードへ
       navigate('/dashboard', { replace: true });
+    } else if (!user && location.pathname !== '/') {
+      // 未ログイン -> ランディングページへ強制リダイレクト
+      navigate('/', { replace: true });
     }
   }, [user, isOnboarded, isLoading, location.pathname, navigate]);
 
@@ -50,6 +57,7 @@ const MainLayout: React.FC = () => {
 const App: React.FC = () => {
   return (
     <AppProvider>
+      <ThemeManager />
       <MainLayout />
     </AppProvider>
   );

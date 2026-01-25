@@ -16,7 +16,7 @@ interface SkillPattern {
 export const ArticleDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { articles, brain, updateBrain, updateArticleStatus, updateArticle, logActivity } = useAppStore();
+  const { articles, brain, updateBrain, updateArticleStatus, updateArticle, logActivity, preferences } = useAppStore();
 
   const article = articles.find(a => a.id === id);
 
@@ -32,7 +32,6 @@ export const ArticleDetail: React.FC = () => {
   }
   
   // General State
-  const [mode, setMode] = useState<'article' | 'advisor'>('article');
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isTyping, setIsTyping] = useState(false);
@@ -70,6 +69,9 @@ export const ArticleDetail: React.FC = () => {
   const [teachingHistory, setTeachingHistory] = useState<{ role: 'model' | 'user', content: string }[]>([]);
   const [teachingInput, setTeachingInput] = useState('');
   const [isTeachingLoading, setIsTeachingLoading] = useState(false);
+
+  // Brain Add Logic
+  const [showBrainAddOptions, setShowBrainAddOptions] = useState(false);
 
   // Frequent Word Modal
   const [selectedWord, setSelectedWord] = useState<FrequentWord | null>(null);
@@ -248,8 +250,8 @@ export const ArticleDetail: React.FC = () => {
     setInput('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setIsTyping(true);
-
-    const responseText = await sendChatMessage(userMsg.content, mode, article.content, brain.content, preferences);
+    // Always use 'article' mode (Advisor removed)
+    const responseText = await sendChatMessage(userMsg.content, 'article', article.content, brain.content, preferences);
 
     const botMsg: Message = {
       id: crypto.randomUUID(),
@@ -370,6 +372,14 @@ export const ArticleDetail: React.FC = () => {
   };
 
   const confirmMerge = () => {
+    // If not showing diff, update directly (Direct Merge)
+    if (!showMerge) {
+        // NOTE: Direct merge doesn't use AI generated proposal here for simplicity,
+        // or we can generate it silently. For "Adding As Is", we might just append summary?
+        // Let's generate proposal silently or just show modal first.
+        // Re-using handleGenerateMerge flow seems safer but user wants "Directly add".
+        // Let's assume confirmMerge is called AFTER proposal is shown OR directly.
+    }
     const newBrainContent = brain.content + "\n\n" + mergeContent;
     updateBrain(newBrainContent);
     updateArticleStatus(article.id, 'mastered');
@@ -615,21 +625,12 @@ export const ArticleDetail: React.FC = () => {
                         能動的学習
                     </h3>
                     <div className="flex gap-2">
-                        {learningMode !== 'memo' && (
-                            <button onClick={() => setLearningMode('memo')} className="text-xs font-bold text-nexus-500 flex items-center gap-1 hover:text-nexus-900 transition-colors p-1.5 hover:bg-nexus-200 rounded">
+                        <button onClick={() => setLearningMode(learningMode === 'memo' ? 'none' : 'memo')} className={`text-xs font-bold flex items-center gap-1 transition-colors p-1.5 rounded ${learningMode === 'memo' ? 'bg-nexus-900 text-white' : 'text-nexus-500 hover:bg-nexus-200 hover:text-nexus-900'}`}>
                                 <PenTool size={14} /> メモ
-                            </button>
-                        )}
-                         {learningMode !== 'teaching' && (
-                            <button onClick={handleStartTeaching} className="text-xs font-bold text-nexus-500 flex items-center gap-1 hover:text-nexus-900 transition-colors p-1.5 hover:bg-nexus-200 rounded">
+                        </button>
+                         <button onClick={learningMode === 'teaching' ? () => setLearningMode('none') : handleStartTeaching} className={`text-xs font-bold flex items-center gap-1 transition-colors p-1.5 rounded ${learningMode === 'teaching' ? 'bg-nexus-900 text-white' : 'text-nexus-500 hover:bg-nexus-200 hover:text-nexus-900'}`}>
                                 <GraduationCap size={14} /> 教える
-                            </button>
-                        )}
-                        {learningMode !== 'none' && (
-                             <button onClick={() => setLearningMode('none')} className="text-xs font-bold text-nexus-400 hover:text-nexus-900 p-1.5">
-                                 <X size={14} />
-                             </button>
-                        )}
+                        </button>
                     </div>
                 </div>
 
@@ -708,12 +709,10 @@ export const ArticleDetail: React.FC = () => {
                 </div>
             </div>
 
-            {/* Bottom Half: Chat Interface */}
-            <div className="h-1/2 flex flex-col bg-white">
+             <div className="h-1/2 flex flex-col bg-white">
                 <div className="h-12 flex items-center justify-between px-4 border-b border-nexus-200 bg-white">
                     <div className="flex bg-nexus-50 rounded-lg p-1">
-                        <button onClick={() => setMode('article')} className={`px-3 py-1 rounded text-xs font-bold transition-all ${mode === 'article' ? 'bg-white text-nexus-900 shadow-sm' : 'text-nexus-400 hover:text-nexus-900'}`}>記事チャット</button>
-                        <button onClick={() => setMode('advisor')} className={`px-3 py-1 rounded text-xs font-bold transition-all flex items-center gap-1 ${mode === 'advisor' ? 'bg-nexus-900 text-white shadow-sm' : 'text-nexus-400 hover:text-nexus-900'}`}><Sparkles size={10} /> アドバイザー</button>
+                        <span className="px-3 py-1 rounded text-xs font-bold bg-white text-nexus-900 shadow-sm">記事チャット</span>
                     </div>
                 </div>
                 <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-nexus-50" ref={scrollRef}>

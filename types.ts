@@ -127,6 +127,18 @@ export interface UsageSummary {
   totalCostCents: number;
 }
 
+export type ThemeType = 'light' | 'dark' | 'system';
+export type LanguageType = 'japanese' | 'english';
+
+export interface UserPreferences {
+  theme: ThemeType;
+  language: LanguageType;
+  aiPersona: string;
+  codeTheme: string;
+  summaryDetail: 'simple' | 'standard' | 'detailed';
+  notificationsEnabled: boolean;
+}
+
 export interface AppState {
   user: any | null; // Supabase user
   brain: PersonalBrain;
@@ -138,6 +150,7 @@ export interface AppState {
   subscription: Subscription | null;
   usageSummary: UsageSummary | null;
   documents: DocumentStoredUpload[];
+  preferences: UserPreferences;
   isOnboarded: boolean;
   isLoading: boolean;
 }

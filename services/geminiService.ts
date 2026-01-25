@@ -611,6 +611,60 @@ export const getLearningRecommendations = async (
 };
 
 /**
+ * Discover Tech Articles: Recommend curated articles based on query
+ */
+export const discoverTechArticles = async (query: string): Promise<{title: string, url: string, reason: string}[]> => {
+    const prompt = `
+        あなたはシニアテックリードです。
+        ユーザーが学習したいキーワード「${query}」に基づいて、
+        **実務で役立つ、質が高い技術ブログ記事や公式ドキュメント**を3件〜5件厳選して提案してください。
+
+        選定基準:
+        - できるだけ最新の情報（この知識カットオフ時点での最新）
+        - 公式ドキュメント、Zenn、Qiita、有名企業のテックブログ、Dev.to、Mediumなど信頼性の高いソース
+        - なぜその記事がお勧めなのかの「推薦理由」を添える
+
+        除外:
+        - まとめサイト、質の低いQ&A、内容が薄いチュートリアル
+
+        出力フォーマット:
+        JSON配列のみ。Markdownコードブロックは不要。
+        各要素のプロパティ:
+        - title: 記事のタイトル
+        - url: 記事のURL（実在するもの、あるいは公式ドキュメントのトップなど確実なもの）
+        - reason: 推薦理由（50文字以内）
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: TEXT_MODEL,
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            title: { type: Type.STRING },
+                            url: { type: Type.STRING },
+                            reason: { type: Type.STRING }
+                        },
+                        required: ["title", "url", "reason"]
+                    }
+                }
+            }
+        });
+
+        const text = response.text || '[]';
+        return JSON.parse(text);
+    } catch (e) {
+        console.error("Discovery failed", e);
+        return [];
+    }
+};
+
+/**
  * Generate Public Article (Zenn/Qiita) from Diary/Notes
  */
 export const generatePublicArticle = async (content: string): Promise<string> => {

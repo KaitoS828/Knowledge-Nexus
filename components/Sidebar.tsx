@@ -1,12 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppStore } from '../store';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Layout, BookOpen, Brain, Activity, Settings, PenTool, LogOut, CreditCard } from 'lucide-react';
+import { Layout, BookOpen, Brain, Activity, Settings, PenTool, LogOut, CreditCard, User } from 'lucide-react';
+import { SettingsModal } from './SettingsModal';
+import { AuthOptionsModal } from './AuthOptionsModal';
 
 export const Sidebar: React.FC = () => {
-  const { signOut } = useAppStore();
+  const { signOut, user } = useAppStore();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const navItems = [
     { id: 'dashboard', path: '/dashboard', icon: Layout, label: 'ダッシュボード' },
@@ -47,37 +50,32 @@ export const Sidebar: React.FC = () => {
         })}
       </nav>
 
-      <div className="p-4 border-t border-nexus-100 space-y-1">
-         <button
-            onClick={() => navigate('/pricing')}
-            className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-              isActive('/pricing')
-                ? 'text-nexus-900 bg-nexus-50 font-bold rounded-lg'
-                : 'text-nexus-400 hover:text-nexus-900'
-            }`}
-         >
-            <CreditCard size={20} />
-            <span className="hidden lg:block">料金プラン</span>
-         </button>
+      <div className="p-4 border-t border-nexus-100 space-y-2">
+          {/* User Profile / Settings Trigger */}
           <button
-            onClick={() => navigate('/settings')}
-            className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-              isActive('/settings')
-                ? 'text-nexus-900 bg-nexus-50 font-bold rounded-lg'
-                : 'text-nexus-400 hover:text-nexus-900'
-            }`}
+            onClick={() => setIsSettingsOpen(true)}
+            className="w-full flex items-center gap-3 p-3 rounded-2xl hover:bg-nexus-50 transition-all group"
           >
-            <Settings size={20} />
-            <span className="hidden lg:block">設定</span>
+            <div className="w-10 h-10 rounded-full bg-nexus-100 flex items-center justify-center text-nexus-600 overflow-hidden shadow-inner flex-shrink-0 border-2 border-white">
+                {user?.user_metadata?.avatar_url ? (
+                    <img src={user.user_metadata.avatar_url} alt="avatar" className="w-full h-full object-cover" />
+                ) : (
+                    <User size={20} />
+                )}
+            </div>
+            <div className="hidden lg:block text-left overflow-hidden">
+                <p className="text-xs font-black text-nexus-900 truncate leading-none mb-1">
+                    {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Anonymous'}
+                </p>
+                <div className="flex items-center gap-1">
+                    <Settings size={10} className="text-nexus-400" />
+                    <span className="text-[10px] font-bold text-nexus-400 uppercase tracking-widest">Settings</span>
+                </div>
+            </div>
           </button>
-         <button
-            onClick={signOut}
-            className="w-full flex items-center gap-3 px-4 py-3 text-nexus-400 hover:text-red-600 transition-colors"
-         >
-            <LogOut size={20} />
-            <span className="hidden lg:block">ログアウト</span>
-         </button>
       </div>
+
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 };

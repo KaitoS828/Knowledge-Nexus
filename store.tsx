@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { AppState, Article, Bookmark, DiaryEntry, LearningTweet, DocumentStoredUpload, Subscription, UsageSummary } from './types';
+import { AppState, Article, Bookmark, DiaryEntry, LearningTweet, DocumentStoredUpload, Subscription, UsageSummary, UserPreferences } from './types';
 import { supabase } from './services/supabase';
 
 const INITIAL_BRAIN = `# 私のエンジニア外部脳
@@ -95,120 +95,139 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Initialize and check session
   useEffect(() => {
+    let mounted = true;
     const init = async () => {
-      // Check Supabase Session
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error("Session check failed:", error);
-      }
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) throw error;
 
-      if (session?.user) {
-        await loadUserData(session.user);
-      } else {
-        setState(prev => ({ ...prev, isLoading: false, user: null }));
-      }
-
-      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
         if (session?.user) {
-           await loadUserData(session.user);
+          await loadUserData(session.user, true); // true for initial load
         } else {
-           // Don't reset if we are in guest mode (user id starts with 'guest')
-           setState(prev => {
-             if (prev.user?.id?.startsWith('guest')) return prev;
-             return { ...INITIAL_STATE, isLoading: false, user: null };
-           });
+          if (mounted) setState(prev => ({ ...prev, isLoading: false, user: null }));
+        }
+      } catch (err) {
+        console.error("Session check failed:", err);
+        if (mounted) setState(prev => ({ ...prev, isLoading: false, user: null }));
+      }
+
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+        if (!mounted) return;
+
+        if (session?.user) {
+           // On tab focus, Supabase might fire this. Don't show full loading if user is same.
+           await loadUserData(session.user, false);
+        } else {
+           if (event === 'SIGNED_OUT') {
+             setState(prev => {
+               if (prev.user?.id?.startsWith('guest')) return prev;
+               return { ...INITIAL_STATE, isLoading: false, user: null };
+             });
+           }
         }
       });
 
-      return () => subscription.unsubscribe();
+      return () => {
+        mounted = false;
+        subscription.unsubscribe();
+      };
     };
     init();
   }, []);
 
-  const loadUserData = async (user: any) => {
-    setState(prev => ({ ...prev, isLoading: true, user }));
+  const loadUserData = async (user: any, isInitial: boolean = false) => {
+    if (isInitial) {
+      setState(prev => ({ ...prev, isLoading: true, user }));
+    } else {
+      setState(prev => ({ ...prev, user }));
+    }
 
-    // Fetch Brain
-    const { data: brainData } = await supabase.from('brains').select('*').eq('user_id', user.id).single();
-    // Fetch Articles
-    const { data: articlesData } = await supabase.from('articles').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
-    // Fetch Logs
-    const { data: logsData } = await supabase.from('activity_logs').select('*').eq('user_id', user.id);
-    // Fetch Diary
-    const { data: diaryData } = await supabase.from('diary_entries').select('*').eq('user_id', user.id).order('date', { ascending: false });
-    // Fetch Tweets
-    const { data: tweetsData } = await supabase.from('learning_tweets').select('*').eq('user_id', user.id).order('timestamp', { ascending: false });
-    // Fetch Bookmarks
-    const { data: bookmarksData } = await supabase.from('bookmarks').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
-    // Fetch Documents
-    const { data: documentsData } = await supabase.from('documents').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
+    try {
+      // Fetch Brain
+      const { data: brainData } = await supabase.from('brains').select('*').eq('user_id', user.id).single();
+      // Fetch Articles
+      const { data: articlesData } = await supabase.from('articles').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
+      // Fetch Logs
+      const { data: logsData } = await supabase.from('activity_logs').select('*').eq('user_id', user.id);
+      // Fetch Diary
+      const { data: diaryData } = await supabase.from('diary_entries').select('*').eq('user_id', user.id).order('date', { ascending: false });
+      // Fetch Tweets
+      const { data: tweetsData } = await supabase.from('learning_tweets').select('*').eq('user_id', user.id).order('timestamp', { ascending: false });
+      // Fetch Bookmarks
+      const { data: bookmarksData } = await supabase.from('bookmarks').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
+      // Fetch Documents
+      const { data: documentsData } = await supabase.from('documents').select('*').eq('user_id', user.id).order('added_at', { ascending: false });
 
-    // Fetch Subscription
-    const { data: subscriptionData } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).single();
+      // Fetch Subscription
+      const { data: subscriptionData } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).single();
 
-    // Fetch Current Month Usage
-    const { data: usageData } = await supabase.rpc('get_current_month_usage', { p_user_id: user.id }).single();
+      // Fetch Current Month Usage
+      const { data: usageData } = await supabase.rpc('get_current_month_usage', { p_user_id: user.id }).single();
 
-    setState(prev => ({
-      ...prev,
-      isOnboarded: !!brainData, // If brain exists, user is onboarded
-      isLoading: false,
-      brain: brainData ? { content: brainData.content, lastRefactored: brainData.last_refactored } : prev.brain,
-      articles: articlesData?.map((a: any) => ({
-        id: a.id,
-        url: a.url,
-        title: a.title,
-        summary: a.summary,
-        content: a.content,
-        practiceGuide: a.practice_guide,
-        status: a.status,
-        frequentWords: a.frequent_words || [],
-        tags: a.tags || [],
-        addedAt: a.added_at,
-        isTestPassed: a.is_test_passed
-      })) || [],
-      activityLogs: logsData || [],
-      diaryEntries: diaryData || [],
-      learningTweets: tweetsData || [],
-      bookmarks: bookmarksData?.map((b: any) => ({
-          id: b.id,
-          url: b.url,
-          note: b.note,
-          addedAt: b.added_at
-      })) || [],
-      documents: documentsData?.map((d: any) => ({
-          id: d.id,
-          name: d.name,
-          type: d.type,
-          content: d.content,
-          summary: d.summary,
-          keyPoints: d.key_points || [],
-          chapters: d.chapters || [],
-          addedAt: d.added_at,
-          fileSize: d.file_size
-      })) || [],
-      subscription: subscriptionData ? {
-        id: subscriptionData.id,
-        userId: subscriptionData.user_id,
-        planType: subscriptionData.plan_type,
-        billingCycle: subscriptionData.billing_cycle,
-        status: subscriptionData.status,
-        stripeCustomerId: subscriptionData.stripe_customer_id,
-        stripeSubscriptionId: subscriptionData.stripe_subscription_id,
-        stripePriceId: subscriptionData.stripe_price_id,
-        currentPeriodStart: subscriptionData.current_period_start,
-        currentPeriodEnd: subscriptionData.current_period_end,
-        cancelAtPeriodEnd: subscriptionData.cancel_at_period_end,
-        canceledAt: subscriptionData.canceled_at,
-        createdAt: subscriptionData.created_at,
-        updatedAt: subscriptionData.updated_at
-      } : null,
-      usageSummary: usageData ? {
-        totalOperations: usageData.total_operations,
-        totalCostCents: usageData.total_cost_cents
-      } : { totalOperations: 0, totalCostCents: 0 }
-    }));
+      setState(prev => ({
+        ...prev,
+        isOnboarded: !!brainData,
+        isLoading: false,
+        brain: brainData ? { content: brainData.content, lastRefactored: brainData.last_refactored } : prev.brain,
+        articles: articlesData?.map((a: any) => ({
+          id: a.id,
+          url: a.url,
+          title: a.title,
+          summary: a.summary,
+          content: a.content,
+          practiceGuide: a.practice_guide,
+          status: a.status,
+          frequentWords: a.frequent_words || [],
+          tags: a.tags || [],
+          addedAt: a.added_at,
+          isTestPassed: a.is_test_passed
+        })) || [],
+        activityLogs: logsData || [],
+        diaryEntries: diaryData || [],
+        learningTweets: tweetsData || [],
+        bookmarks: bookmarksData?.map((b: any) => ({
+            id: b.id,
+            url: b.url,
+            note: b.note,
+            addedAt: b.added_at
+        })) || [],
+        documents: documentsData?.map((d: any) => ({
+            id: d.id,
+            name: d.name,
+            type: d.type,
+            content: d.content,
+            summary: d.summary,
+            keyPoints: d.key_points || [],
+            chapters: d.chapters || [],
+            addedAt: d.added_at,
+            fileSize: d.file_size
+        })) || [],
+        subscription: subscriptionData ? {
+          id: subscriptionData.id,
+          userId: subscriptionData.user_id,
+          planType: subscriptionData.plan_type,
+          billingCycle: subscriptionData.billing_cycle,
+          status: subscriptionData.status,
+          stripeCustomerId: subscriptionData.stripe_customer_id,
+          stripeSubscriptionId: subscriptionData.stripe_subscription_id,
+          stripePriceId: subscriptionData.stripe_price_id,
+          currentPeriodStart: subscriptionData.current_period_start,
+          currentPeriodEnd: subscriptionData.current_period_end,
+          cancelAtPeriodEnd: subscriptionData.cancel_at_period_end,
+          canceledAt: subscriptionData.canceled_at,
+          createdAt: subscriptionData.created_at,
+          updatedAt: subscriptionData.updated_at
+        } : null,
+        usageSummary: usageData ? {
+          totalOperations: usageData.total_operations,
+          totalCostCents: usageData.total_cost_cents
+        } : { totalOperations: 0, totalCostCents: 0 }
+      }));
+    } catch (e) {
+      console.error("Data loading failed:", e);
+      setState(prev => ({ ...prev, isLoading: false }));
+    }
   };
 
   const signInWithGoogle = async () => {
@@ -333,7 +352,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Check storage limit for free users
     if (!checkStorageLimit() && !state.user.isGuest) {
-      alert('Freeプランの保存上限（2件）に達しました。Proプランにアップグレードしてください。');
+      // Alert removed to handle in UI with Modal
       throw new Error('Storage limit reached');
     }
 
@@ -543,7 +562,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Check storage limit for free users
     if (!checkStorageLimit() && !state.user.isGuest) {
-      alert('Freeプランの保存上限（2件）に達しました。Proプランにアップグレードしてください。');
+        // Alert removed to handle in UI with Modal
       throw new Error('Storage limit reached');
     }
 

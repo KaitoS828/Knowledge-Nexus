@@ -4,6 +4,7 @@ import { useToast } from './ui/Toast';
 import { processDocument } from '../services/pdfService';
 import { Upload, FileText, Loader2, Trash2, File, CheckCircle, X, BookOpen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import { UpgradeModal } from './UpgradeModal';
 
 export const DocumentUploader: React.FC = () => {
     const { documents, addDocument, deleteDocument } = useAppStore();
@@ -12,6 +13,7 @@ export const DocumentUploader: React.FC = () => {
     const [dragActive, setDragActive] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedDocId, setSelectedDocId] = useState<string | null>(null);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     const selectedDoc = documents.find(d => d.id === selectedDocId);
 
@@ -41,9 +43,13 @@ export const DocumentUploader: React.FC = () => {
                 fileSize: file.size
             });
             addToast({ type: 'success', message: `「${file.name}」の分析が完了しました` });
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            addToast({ type: 'error', message: 'アップロードまたは分析に失敗しました。Gemini API Key設定を確認してください' });
+            if (e.message === 'Storage limit reached') {
+                setShowUpgradeModal(true);
+            } else {
+                addToast({ type: 'error', message: 'アップロードまたは分析に失敗しました。Gemini API Key設定を確認してください' });
+            }
         } finally {
             setIsUploading(false);
         }
@@ -106,6 +112,7 @@ export const DocumentUploader: React.FC = () => {
                             <div className="flex flex-col items-center gap-2">
                                 <Loader2 className="animate-spin text-nexus-accent" />
                                 <span className="text-xs text-nexus-500">AIが分析中...</span>
+                                <span className="text-[10px] text-nexus-400">数十秒かかる場合があります</span>
                             </div>
                         ) : (
                             <div className="flex flex-col items-center gap-2 text-nexus-400">
@@ -258,6 +265,11 @@ export const DocumentUploader: React.FC = () => {
                     </div>
                 )}
             </div>
+            
+            <UpgradeModal 
+                isOpen={showUpgradeModal} 
+                onClose={() => setShowUpgradeModal(false)}
+            />
         </div>
     );
 };
