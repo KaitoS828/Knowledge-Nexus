@@ -1,17 +1,28 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { DocumentStoredUpload, QuizQuestion } from '../types';
 import { ArrowLeft, FileText, ChevronDown, ChevronUp, BookOpen, Lightbulb, Brain, Sparkles, Target, Loader2, CheckCircle, XCircle, Trophy, GripVertical, Hash, ArrowRight, Check, X, AlertCircle, RefreshCcw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { useAppStore } from '../store';
 import { generateQuiz } from '../services/geminiService';
 
-interface DocumentDetailProps {
-  document: DocumentStoredUpload;
-  onBack: () => void;
-}
+export const DocumentDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { documents, brain, updateBrain } = useAppStore();
 
-export const DocumentDetail: React.FC<DocumentDetailProps> = ({ document, onBack }) => {
-  const { brain, updateBrain } = useAppStore();
+  const document = documents.find(d => d.id === id);
+
+  if (!document) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <p className="text-nexus-500 mb-4">ドキュメントが見つかりません</p>
+        <button onClick={() => navigate(-1)} className="text-nexus-600 hover:text-nexus-900 underline">
+          戻る
+        </button>
+      </div>
+    );
+  }
   const [expandedChapter, setExpandedChapter] = useState<number | null>(null);
   const [showFullContent, setShowFullContent] = useState(false);
 
@@ -298,7 +309,7 @@ Markdown形式で出力してください。
       {/* Header */}
       <div className="h-14 flex items-center px-6 border-b border-purple-200 gap-4 bg-white/80 backdrop-blur z-10 justify-between shrink-0">
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <button onClick={onBack} className="p-2 hover:bg-purple-100 rounded-lg text-purple-500 transition-colors">
+          <button onClick={() => navigate(-1)} className="p-2 hover:bg-purple-100 rounded-lg text-purple-500 transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div className="flex items-center gap-2">

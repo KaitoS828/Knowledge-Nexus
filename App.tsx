@@ -1,24 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { AppProvider, useAppStore } from './store';
+import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
-import { ArticleList } from './components/ArticleList';
-import { ArticleDetail } from './components/ArticleDetail';
-import { DocumentDetail } from './components/DocumentDetail';
-import { BrainEditor } from './components/BrainEditor';
-import { KnowledgeGraph } from './components/KnowledgeGraph';
-import { Onboarding } from './components/Onboarding';
 import { LandingPage } from './components/LandingPage';
-import { LearningDiary } from './components/LearningDiary';
-import { PricingPage } from './components/PricingPage';
-import { Article, DocumentStoredUpload } from './types';
+import { Onboarding } from './components/Onboarding';
 import { Loader2 } from 'lucide-react';
 
 const MainLayout: React.FC = () => {
   const { user, isOnboarded, isLoading } = useAppStore();
-  const [view, setView] = useState('dashboard');
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  const [selectedDocument, setSelectedDocument] = useState<DocumentStoredUpload | null>(null);
-  const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const navigate = useNavigate();
+  const params = useParams();
 
   if (isLoading) {
     return (
@@ -38,59 +29,12 @@ const MainLayout: React.FC = () => {
     return <Onboarding />;
   }
 
-  // 3. Logged In & Onboarded -> Main App
-  const renderContent = () => {
-    if (selectedArticle) {
-      return (
-        <ArticleDetail
-          article={selectedArticle}
-          onBack={() => setSelectedArticle(null)}
-          toggleSidebar={() => setIsSidebarVisible(!isSidebarVisible)}
-        />
-      );
-    }
-
-    if (selectedDocument) {
-      return (
-        <DocumentDetail
-          document={selectedDocument}
-          onBack={() => setSelectedDocument(null)}
-        />
-      );
-    }
-
-    switch (view) {
-      case 'dashboard':
-        return <ArticleList onSelectArticle={setSelectedArticle} onSelectDocument={setSelectedDocument} />;
-      case 'diary':
-        return <LearningDiary />;
-      case 'brain':
-        return <BrainEditor />;
-      case 'graph':
-        return <KnowledgeGraph />;
-      case 'pricing':
-        return <PricingPage onBack={() => setView('dashboard')} />;
-      default:
-        return <ArticleList onSelectArticle={setSelectedArticle} onSelectDocument={setSelectedDocument} />;
-    }
-  };
-
-  if (selectedArticle || selectedDocument) {
-      return (
-        <div className="flex h-screen w-screen overflow-hidden bg-nexus-50">
-            {isSidebarVisible && selectedArticle && <Sidebar currentView={view} setView={setView} />}
-            <main className="flex-1 h-full relative">
-                {renderContent()}
-            </main>
-        </div>
-      );
-  }
-
+  // 3. Logged In & Onboarded -> Main App with Sidebar and Outlet
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-nexus-50">
-      <Sidebar currentView={view} setView={setView} />
+      <Sidebar />
       <main className="flex-1 h-full relative">
-        {renderContent()}
+        <Outlet />
       </main>
     </div>
   );

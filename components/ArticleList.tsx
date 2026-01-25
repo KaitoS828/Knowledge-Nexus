@@ -1,16 +1,12 @@
 import React, { useState, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store';
 import { Article } from '../types';
 import { Plus, Search, BookOpen, CheckCircle, Clock, Flame, Trophy, Hash, Loader2, Trash2, Compass, ArrowRight, Sparkles, Upload, Link, FileText } from 'lucide-react';
 import { fetchArticleContent, analyzeArticleContent, getLearningRecommendations } from '../services/geminiService';
 import { processDocument } from '../services/pdfService';
 import { RightSidebar } from './RightSidebar';
-
-interface ArticleListProps {
-  onSelectArticle: (article: Article) => void;
-  onSelectDocument: (document: any) => void;
-}
 
 // Simple Heatmap Component
 const ActivityHeatmap = () => {
@@ -49,7 +45,8 @@ const ActivityHeatmap = () => {
     );
 };
 
-export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle, onSelectDocument }) => {
+export const ArticleList: React.FC = () => {
+  const navigate = useNavigate();
   const { articles, addArticle, deleteArticle, updateArticle, activityLogs, brain, documents, addDocument, deleteDocument } = useAppStore();
   const [urlInput, setUrlInput] = useState('');
   const [isFetching, setIsFetching] = useState(false);
@@ -85,7 +82,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle, onSel
       setIsFetching(false);
 
       // 2. Background Analysis (Async)
-      analyzeArticleContent(newArticle.content).then(analysis => {
+      analyzeArticleContent(newArticle.content, preferences).then(analysis => {
           updateArticle(newId, analysis);
       });
 
@@ -384,7 +381,7 @@ export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle, onSel
             {documents.map((doc) => (
                 <div
                 key={doc.id}
-                onClick={() => onSelectDocument(doc)}
+                onClick={() => navigate(`/document/${doc.id}`)}
                 className="bg-gradient-to-br from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border-2 border-purple-200 hover:border-purple-300 rounded-2xl p-6 cursor-pointer transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1 flex flex-col h-full relative overflow-hidden"
                 >
                   <div className="flex justify-between items-start mb-4">
@@ -439,9 +436,9 @@ export const ArticleList: React.FC<ArticleListProps> = ({ onSelectArticle, onSel
 
             {/* Articles */}
             {filteredArticles.map((article) => (
-                <div 
-                key={article.id} 
-                onClick={() => onSelectArticle(article)}
+                <div
+                key={article.id}
+                onClick={() => navigate(`/article/${article.id}`)}
                 className={`bg-white hover:bg-nexus-50 border border-nexus-200 hover:border-nexus-300 rounded-2xl p-6 cursor-pointer transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1 flex flex-col h-full relative overflow-hidden ${
                     article.status === 'mastered' ? 'opacity-50 hover:opacity-100 grayscale-[0.5] hover:grayscale-0' : ''
                 }`}

@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Check, Zap, Crown, Sparkles, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store';
 
-interface PricingPageProps {
-  onBack: () => void;
-}
-
-export const PricingPage: React.FC<PricingPageProps> = ({ onBack }) => {
+export const PricingPage: React.FC = () => {
   const { subscription, user, upgradeToProMonthly, upgradeToProYearly } = useAppStore();
+  const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [isUpgrading, setIsUpgrading] = useState(false);
 
@@ -41,7 +39,7 @@ export const PricingPage: React.FC<PricingPageProps> = ({ onBack }) => {
       <div className="border-b border-nexus-200 bg-white/80 backdrop-blur">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
           <button
-            onClick={onBack}
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-nexus-100 rounded-lg text-nexus-500 transition-colors"
           >
             <ArrowLeft size={20} />

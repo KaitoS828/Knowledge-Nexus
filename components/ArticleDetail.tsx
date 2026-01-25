@@ -1,15 +1,10 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Article, Message, QuizQuestion, FrequentWord } from '../types';
 import { useAppStore } from '../store';
 import { sendChatMessage, generateMergeProposal, generateQuiz, generateStepByStepGuide, getTeachingResponse } from '../services/geminiService';
 import { ArrowLeft, Send, Sparkles, Book, GitMerge, Check, CheckCircle, X, ClipboardList, AlertCircle, Tag, Info, Volume2, StopCircle, Hash, Lightbulb, Code, Rocket, Database, Layers, Target, Zap, ChevronDown, ChevronUp, Loader2, PenTool, RefreshCcw, ArrowRight, Highlighter, GripVertical, Timer, Maximize2, Minimize2, ExternalLink, GraduationCap, User, MessageCircle } from 'lucide-react';
-
-interface ArticleDetailProps {
-  article: Article;
-  onBack: () => void;
-  toggleSidebar?: () => void; // Optional prop to toggle main sidebar visibility
-}
 
 interface SkillPattern {
   icon: string;
@@ -18,8 +13,23 @@ interface SkillPattern {
   action: string;
 }
 
-export const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, onBack, toggleSidebar }) => {
-  const { brain, updateBrain, updateArticleStatus, updateArticle, logActivity } = useAppStore();
+export const ArticleDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { articles, brain, updateBrain, updateArticleStatus, updateArticle, logActivity } = useAppStore();
+
+  const article = articles.find(a => a.id === id);
+
+  if (!article) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <p className="text-nexus-500 mb-4">記事が見つかりません</p>
+        <button onClick={() => navigate(-1)} className="text-nexus-600 hover:text-nexus-900 underline">
+          戻る
+        </button>
+      </div>
+    );
+  }
   
   // General State
   const [mode, setMode] = useState<'article' | 'advisor'>('article');
@@ -108,7 +118,6 @@ export const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, onBack, t
 
   const handleToggleFocus = () => {
     setIsFocusMode(!isFocusMode);
-    if (toggleSidebar) toggleSidebar();
   };
 
   useEffect(() => {
@@ -240,7 +249,7 @@ export const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, onBack, t
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setIsTyping(true);
 
-    const responseText = await sendChatMessage(userMsg.content, mode, article.content, brain.content);
+    const responseText = await sendChatMessage(userMsg.content, mode, article.content, brain.content, preferences);
 
     const botMsg: Message = {
       id: crypto.randomUUID(),
@@ -462,7 +471,7 @@ export const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, onBack, t
       {/* Header */}
       <div className="h-14 flex items-center px-6 border-b border-nexus-200 gap-4 bg-white/80 backdrop-blur z-10 justify-between shrink-0">
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            <button onClick={onBack} className="p-2 hover:bg-nexus-100 rounded-lg text-nexus-500 transition-colors">
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-nexus-100 rounded-lg text-nexus-500 transition-colors">
                 <ArrowLeft size={20} />
             </button>
             <h2 className="font-bold truncate text-lg text-nexus-900">{article.title}</h2>
@@ -475,15 +484,13 @@ export const ArticleDetail: React.FC<ArticleDetailProps> = ({ article, onBack, t
              </div>
 
              {/* Focus Toggle */}
-             {toggleSidebar && (
-                 <button 
-                    onClick={handleToggleFocus} 
-                    className={`p-2 rounded-lg transition-colors ${isFocusMode ? 'bg-nexus-900 text-white' : 'text-nexus-500 hover:bg-nexus-100'}`}
-                    title={isFocusMode ? "集中モード解除" : "集中モード (サイドバーを隠す)"}
-                 >
-                    {isFocusMode ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-                 </button>
-             )}
+             <button
+                onClick={handleToggleFocus}
+                className={`p-2 rounded-lg transition-colors ${isFocusMode ? 'bg-nexus-900 text-white' : 'text-nexus-500 hover:bg-nexus-100'}`}
+                title={isFocusMode ? "集中モード解除" : "集中モード"}
+             >
+                {isFocusMode ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
+             </button>
           </div>
       </div>
 

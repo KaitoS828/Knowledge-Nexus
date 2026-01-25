@@ -12,6 +12,15 @@ const INITIAL_BRAIN = `# 私のエンジニア外部脳
 - **Node.js**: JSランタイム。
 `;
 
+const DEFAULT_PREFERENCES: UserPreferences = {
+  theme: 'system',
+  language: 'japanese',
+  aiPersona: 'mentor',
+  codeTheme: 'github',
+  summaryDetail: 'standard',
+  notificationsEnabled: true
+};
+
 const INITIAL_STATE: AppState = {
   user: null,
   isOnboarded: false,
@@ -27,7 +36,8 @@ const INITIAL_STATE: AppState = {
   bookmarks: [],
   documents: [],
   subscription: null,
-  usageSummary: null
+  usageSummary: null,
+  preferences: DEFAULT_PREFERENCES
 };
 
 interface AppContextType extends AppState {
@@ -63,6 +73,8 @@ interface AppContextType extends AppState {
   checkStorageLimit: () => boolean;
   logUsage: (operationType: string, inputTokens: number, outputTokens: number, resourceId?: string) => Promise<void>;
   refreshUsage: () => Promise<void>;
+  updatePreferences: (updates: Partial<UserPreferences>) => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -618,17 +630,67 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const refreshUsage = async () => {
     if (!state.user || state.user.isGuest) return;
 
-    const { data: usageData } = await supabase.rpc('get_current_month_usage', {
+    const { data: usageData, error } = await supabase.rpc('get_current_month_usage', {
       p_user_id: state.user.id
-    }).single();
+    });
+
+    if (error) {
+        console.error("Failed to fetch usage:", error);
+        return;
+    }
+
+    const typedUsage = usageData as { total_operations: number; total_cost_cents: number };
 
     setState(prev => ({
       ...prev,
-      usageSummary: usageData ? {
-        totalOperations: usageData.total_operations,
-        totalCostCents: usageData.total_cost_cents
+      usageSummary: typedUsage ? {
+        totalOperations: typedUsage.total_operations,
+        totalCostCents: typedUsage.total_cost_cents
       } : { totalOperations: 0, totalCostCents: 0 }
     }));
+  };
+
+  const updatePreferences = async (updates: Partial<UserPreferences>) => {
+    setState(prev => ({
+      ...prev,
+      preferences: { ...prev.preferences, ...updates }
+    }));
+
+    if (!state.user || state.user.isGuest) return;
+
+    const { error } = await supabase.from('user_preferences').upsert({
+        user_id: state.user.id,
+        ...updates,
+        updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+
+    if (error) console.error("Failed to save preferences:", error);
+  };
+
+  const deleteAccount = async () => {
+    if (!state.user || state.user.isGuest) return;
+
+    if (!confirm('本当にアカウントを削除しますか？全てのデータが完全に消去され、復旧することはできません。')) {
+        return;
+    }
+
+    try {
+        const userId = state.user.id;
+        await supabase.from('articles').delete().eq('user_id', userId);
+        await supabase.from('brains').delete().eq('user_id', userId);
+        await supabase.from('diary_entries').delete().eq('user_id', userId);
+        await supabase.from('learning_tweets').delete().eq('user_id', userId);
+        await supabase.from('bookmarks').delete().eq('user_id', userId);
+        await supabase.from('documents').delete().eq('user_id', userId);
+        await supabase.from('subscriptions').delete().eq('user_id', userId);
+        await supabase.from('user_preferences').delete().eq('user_id', userId);
+
+        await supabase.auth.signOut();
+        alert('アカウントと全てのデータが削除されました。');
+    } catch (e) {
+        console.error("Deletion failed:", e);
+        alert('削除中にエラーが発生しました。');
+    }
   };
 
   return (
@@ -660,7 +722,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       checkUsageLimit,
       checkStorageLimit,
       logUsage,
-      refreshUsage
+      refreshUsage,
+      updatePreferences,
+      deleteAccount
     }}>
       {children}
     </AppContext.Provider>

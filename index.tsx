@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+import { RouterProvider } from 'react-router-dom';
+import { router } from './router';
 
 console.log("[index.tsx] Script started");
 
@@ -16,7 +17,7 @@ const root = ReactDOM.createRoot(rootElement);
 console.log("[index.tsx] Rendering App...");
 root.render(
   <React.StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </React.StrictMode>
 );
 console.log("[index.tsx] Render called");

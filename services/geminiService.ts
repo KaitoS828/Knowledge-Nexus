@@ -14,37 +14,104 @@ const REASONING_MODEL = 'gemini-3-pro-preview';
 
 /**
  * Utility to clean up dense markdown and improve Japanese readability
+ * Aggressively filters out noise from scraped content
  */
 const cleanMarkdown = (text: string): string => {
   if (!text) return "";
-  
-  // 1. Basic Markdown cleaning
+
   let cleaned = text;
+
+  // 0. Remove common SNS/share button patterns FIRST
+  const noisePatterns = [
+    // SNS share buttons
+    /X\(Twitter\).*?はてなブックマーク.*?(?=\n|$)/gi,
+    /にポスト.*?登録\n?/gi,
+    /Twitter.*?Facebook.*?(?:\n|$)/gi,
+    /Xにシェア|Facebookでシェア|はてなブックマーク/gi,
+
+    // Backslash-wrapped keywords (\ \ AI \ \ Flutter \ \)
+    /\\+\s*[A-Za-z]+\s*\\+/g,
+    /\\+\s*([ぁ-ん]|[ァ-ヴー]|[一-龥])+\s*\\+/g,
+
+    // Single line with just numbers (page numbers, line numbers)
+    /^\s*(\d{1,3})\s*$/gm,
+
+    // Lines with only symbols
+    /^\s*[|\/\\~\-=]*\s*$/gm,
+
+    // Comment-like markers (//)
+    /^\/\/\s+[^\n]*$/gm,
+
+    // Tag-like patterns
+    /^\s*[#]+\s*(?:[a-z]+|[ぁ-ん]+|[ァ-ヴー]+)\s*$/gm,
+
+    // Sponsored/Ad indicators
+    /※.*?(?:広告|提供|スポンサー).*/gi,
+    /\[?(?:広告|AD|Related|More)\]?/gi,
+
+    // Navigation breadcrumbs
+    /^\s*(?:ホーム|トップ|前へ|次へ|メニュー)\s*>\s*.*$/gm,
+  ];
+
+  noisePatterns.forEach(pattern => {
+    cleaned = cleaned.replace(pattern, '');
+  });
+
+  // 1. Line-by-line filtering
+  const lines = cleaned.split('\n');
+  const filteredLines = lines.filter(line => {
+    const trimmed = line.trim();
+
+    // Skip completely empty lines (but preserve paragraph breaks)
+    if (trimmed.length === 0) return true;
+
+    // Skip lines with only numbers
+    if (/^\d+$/.test(trimmed)) return false;
+
+    // Skip lines with only symbols/special chars
+    if (/^[|\/\\~\-=\*\s]+$/.test(trimmed)) return false;
+
+    // Skip if it's only backslash-wrapped text
+    if (/^\\+\s*[A-Za-z\s]+\\+$/.test(trimmed)) return false;
+
+    // Skip pure URL lines without context
+    if (/^https?:\/\/[^\s]+$/.test(trimmed)) return false;
+
+    // Skip navigation-like text
+    if (/^(メニュー|ホーム|トップ|サイトマップ|お問い合わせ|プライバシー|利用規約|戻る|次へ|前へ)$/i.test(trimmed)) return false;
+
+    return true;
+  });
+
+  cleaned = filteredLines.join('\n');
+
+  // 2. Basic Markdown cleaning
   // Ensure space before headers
   cleaned = cleaned.replace(/(?<!\n)\n(#+ )/g, "\n\n$1");
   // Ensure space before lists
   cleaned = cleaned.replace(/(?<!\n)\n(- )/g, "\n\n$1");
-  // Ensure space before numbered lists
-  cleaned = cleaned.replace(/(?<!\n)\n(\d+\. )/g, "\n\n$1");
+  // Ensure space before numbered lists (but not page numbers)
+  cleaned = cleaned.replace(/(?<!\n)\n(\d{1,2}\. [A-Za-zぁ-ん])/g, "\n\n$1");
   // Ensure space before code blocks
   cleaned = cleaned.replace(/(?<!\n)\n(```)/g, "\n\n$1");
 
-  // 2. Japanese readability improvement (Sentence spacing)
-  // We split by code blocks to avoid messing up code
+  // 3. Japanese readability improvement (Sentence spacing)
   const codeBlockRegex = /(```[\s\S]*?```)/g;
   const parts = cleaned.split(codeBlockRegex);
-  
+
   cleaned = parts.map(part => {
     if (part.startsWith('```')) return part;
-    
-    // Replace "。" with "。\n\n" to create paragraphs for each sentence or major clause
-    // But avoid doing it if it's already followed by a newline
-    // Also consider "、" if sentences are extremely long, but "。" is safer.
+
+    // Replace "。" with "。\n\n" for paragraph breaks
     let readablePart = part.replace(/。(?!\n)/g, '。\n\n');
-    
-    // Also add spacing around English/Japanese boundaries might be nice but let's stick to line breaks
     return readablePart;
   }).join('');
+
+  // 4. Remove excessive blank lines (more than 2 consecutive)
+  cleaned = cleaned.replace(/\n\n\n+/g, '\n\n');
+
+  // 5. Trim leading/trailing whitespace
+  cleaned = cleaned.trim();
 
   return cleaned;
 };
@@ -76,7 +143,27 @@ export const fetchArticleContent = async (url: string): Promise<Partial<Article>
           url: url,
           formats: ['markdown'],
           onlyMainContent: true,
-          excludeTags: ['nav', 'header', 'footer', 'aside', 'script', 'style', 'form', 'iframe']
+          excludeTags: [
+            'nav', 'header', 'footer', 'aside', 'script', 'style', 'form', 'iframe',
+            'svg', 'noscript', 'meta', 'link', 'button', 'input', 'select', 'textarea'
+          ],
+          removeCSSSelectors: [
+            // Social share buttons
+            '.social-share', '.share-buttons', '.sns-share', '.sns',
+            '[class*="twitter"]', '[class*="facebook"]', '[class*="share"]',
+            // Navigation
+            '.navbar', '.nav', '.menu', '.sidebar', '.toc', '.breadcrumb',
+            // Ads
+            '.advertisement', '.ad', '.ads', '.banner', '[data-ad]', '[class*="sponsor"]',
+            // Related content
+            '.related', '.recommended', '.more-articles', '[class*="related"]',
+            // Comments and forms
+            '.comments', '.comment-form', '[class*="widget"]',
+            // Tags and metadata
+            '.tags', '.categories', '.meta', '.post-meta', '.author-info',
+            // Images and figures (often contain noise)
+            'figure', 'figcaption'
+          ]
         })
       });
 
@@ -100,12 +187,36 @@ export const fetchArticleContent = async (url: string): Promise<Partial<Article>
   if (!content) {
     console.log("Fetching content via Gemini Search...");
     try {
-      let searchPrompt = `URL: ${url} の記事全文をMarkdown形式で取得してください。`;
-      
+      let searchPrompt = `URL: ${url} の記事の**本文のみ**をMarkdown形式で取得してください。
+
+以下のようなノイズは**絶対に含めないでください**:
+- SNS共有ボタン（「X(Twitter)にポスト」「Facebookに投稿」「はてなブックマーク」など）
+- ナビゲーションメニューやサイト管理メニュー
+- ページ番号や行番号（単なる数字）
+- タグやカテゴリー表記
+- 広告やスポンサー表記
+- 著者情報や投稿日時（記事本文に関係ない場合）
+
+**記事の実質的な本文のみを抽出**してください。`;
+
       if (isYoutube) {
-        searchPrompt = `URL: ${url} はYouTube動画です。この動画の「タイトル」と「内容の詳細な要約（文字起こしのような詳細レベル）」を取得してください。Markdown形式で出力してください。`;
+        searchPrompt = `URL: ${url} はYouTube動画です。この動画の「タイトル」と「内容の詳細な要約（文字起こしのような詳細レベル）」を取得してください。
+
+ノイズは含めないでください:
+- ライク数やコメント数などの統計情報
+- 関連動画のリンク
+- チャンネル情報やプロフィール
+
+実質的な動画の内容のみをMarkdown形式で出力してください。`;
       } else if (isTwitter) {
-        searchPrompt = `URL: ${url} はX (旧Twitter) の投稿です。このスレッドまたはポストの内容を全文取得し、Markdown形式で出力してください。`;
+        searchPrompt = `URL: ${url} はX (旧Twitter) の投稿です。このスレッドまたはポストの**テキスト内容のみ**を全文取得してください。
+
+以下は含めないでください:
+- いいね数やリツイート数
+- プロフィール情報
+- 他ユーザーへのメンション（スレッド本体でなければ）
+
+投稿の実質的なテキスト内容をMarkdown形式で出力してください。`;
       }
 
       const searchResponse = await ai.models.generateContent({
@@ -157,9 +268,18 @@ export const analyzeArticleContent = async (content: string): Promise<Partial<Ar
     # 入力テキスト
     ${content.substring(0, 30000)} ... (truncated for prompt)
 
-    # 重要な注意事項
-    入力テキストには、SNSボタン（「Twitterにポスト」「Facebookに投稿」など）、ナビゲーション、広告、フッター情報などのノイズが含まれている可能性があります。
-    これらは無視し、**記事本文のみ**に注目して分析してください。
+    # 重要な注意事項 - ノイズフィルタリング
+    入力テキストには、以下のようなノイズが含まれている可能性があります。**これらは絶対に無視してください**:
+
+    - SNS共有ボタンテキスト: 「X(Twitter)にポスト」「Facebookに投稿」「はてなブックマークに登録」など
+    - ナビゲーションリンク: メニュー、パンくずリスト、関連記事リンク
+    - ページ番号・行番号: 単なる数字「67」「40」など
+    - ロゴやカテゴリー記号: 「\ \ AI \ \」「\ \ Flutter \ \」などのバックスラッシュ囲み
+    - タグやカテゴリー: 「#」記号のみの行、複数の「技術」タグ
+    - 広告・スポンサー: 「※広告」「提供:」「スポンサー」
+    - 著者情報・メタデータ: 投稿日時、著者プロフィール（要約に不要な場合）
+
+    **記事の実質的な本文内容にのみ集中**して分析し、上記のノイズは完全に除外してください。
 
     # タスク
     この記事を分析し、エンジニアが実務や学習に活かすための具体的な提案を作成してください。
@@ -283,14 +403,27 @@ export const sendChatMessage = async (
   message: string, 
   mode: 'article' | 'advisor', 
   articleContent: string, 
-  brainContent: string
+  brainContent: string,
+  preferences?: any
 ): Promise<string> => {
-   let systemInstruction = "";
+  const persona = preferences?.aiPersona || 'mentor';
+  const language = preferences?.language || 'japanese';
+
+  const personaPrompts = {
+    mentor: "あなたは優しく励ますメンターです。初心者に寄り添い、ポジティブな言葉で導いてください。",
+    coach: "あなたは厳しく的確なプロのコーチです。無駄を省き、改善点をストレートに指摘してください。",
+    socratic: "あなたはソクラテス式の対話を行う哲学者です。直接答えを教えるのではなく、賢明な問いかけによってユーザー自身に答えを導き出させてください。"
+  };
+
+  const langPrompt = language === 'english' ? "Please respond in English." : "回答は日本語で行ってください。";
+
+  let systemInstruction = "";
   if (mode === 'article') {
-    systemInstruction = `あなたは親切な技術チューターです。記事のコンテキストのみに基づいて回答してください: \n\n${articleContent}`;
+    systemInstruction = `${personaPrompts[persona as keyof typeof personaPrompts]}\n記事のコンテキストのみに基づいて回答してください: \n\n${articleContent}\n\n${langPrompt}`;
   } else {
-    systemInstruction = `あなたはシニアエンジニアのアドバイザーです。Brain ContextとArticle Contextを比較し助言してください。`;
+    systemInstruction = `${personaPrompts[persona as keyof typeof personaPrompts]}\nBrain ContextとArticle Contextを比較し助言してください。\n\n${langPrompt}`;
   }
+
   try {
     const response = await ai.models.generateContent({
       model: REASONING_MODEL,
