@@ -179,7 +179,7 @@ export const UnifiedDashboard: React.FC = () => {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => handleTabChange(tab.id)}
                 className={`
                   flex items-center gap-2 px-4 py-3 font-medium text-sm transition-all relative
                   ${isActive 
