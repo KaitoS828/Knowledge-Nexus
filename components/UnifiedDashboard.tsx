@@ -43,7 +43,7 @@ export const UnifiedDashboard: React.FC = () => {
     if (tab && tab !== activeTab) {
       setActiveTab(tab);
     } else if (!tab) {
-      // /dashboard のみの場合は discover にリダイレクト
+      // /dashboard のみの場合は discover にリダイレクト（デフォルト）
       navigate('/dashboard/discover', { replace: true });
     }
   }, [tab]);

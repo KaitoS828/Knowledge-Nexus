@@ -1,3 +1,5 @@
+import React from 'react';
+
 // 画像マークダウンとHTMLタグを削除するユーティリティ関数
 export const cleanExcerpt = (text: string): string => {
   if (!text) return '';
@@ -28,7 +30,7 @@ export const QiitaLogo: React.FC<{ size?: number }> = ({ size = 16 }) => (
 );
 
 // Zennのロゴアイコンコンポーネント
-export const ZennLogo: React.FC<{ size?: number }> = ({ size = 16 }> = (
+export const ZennLogo: React.FC<{ size?: number }> = ({ size = 16 }) => (
   <div 
     className="flex items-center justify-center rounded"
     style={{ 
