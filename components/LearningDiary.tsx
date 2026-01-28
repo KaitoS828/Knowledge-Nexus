@@ -5,6 +5,7 @@ import { PenTool, Search, Calendar, Sparkles, Send, Trash2, Loader2, MessageSqua
 import { GoogleGenAI } from "@google/genai";
 import { draftDiaryFromTweets, generatePublicArticle } from '../services/geminiService';
 import { DiaryEntry } from '../types';
+import { RelatedArticlesSidebar } from './RelatedArticlesSidebar';
 
 export const LearningDiary: React.FC = () => {
   const { diaryEntries, addDiaryEntry, deleteDiaryEntry, learningTweets, addTweet, deleteTweet, clearTweets } = useAppStore();
@@ -302,6 +303,9 @@ export const LearningDiary: React.FC = () => {
 
               </div>
           </div>
+
+          {/* Right Sidebar: Related Articles */}
+          <RelatedArticlesSidebar currentText={diaryInput} />
       </div>
 
       {/* Diary Detail Modal */}
