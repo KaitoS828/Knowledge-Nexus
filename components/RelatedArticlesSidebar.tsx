@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-<parameter name="useAppStore } from '../store';
+import { useAppStore } from '../store';
 import { Article } from '../types';
 import { Sparkles, BookOpen, ArrowRight, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
