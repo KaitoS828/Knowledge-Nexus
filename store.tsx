@@ -85,6 +85,8 @@ interface AppContextType extends AppState {
   // Alert & Confirm
   showAlert: (message: string, type?: 'info' | 'success' | 'error', title?: string) => Promise<void>;
   showConfirm: (message: string, title?: string) => Promise<boolean>;
+  // Onboarding
+  setIsOnboarded: (value: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
