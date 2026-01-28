@@ -348,17 +348,42 @@ export const ArticleList: React.FC = () => {
                   >
                     {isFetching ? (
                       <>
-                        <Loader2 className="animate-spin" />
-                        <span className="text-xs">追加中(数十秒かかる場合があります)</span>
+                        <Loader2 className="animate-spin" size={18} />
+                        <div className="flex flex-col items-start">
+                          <span className="text-xs">{progressMessage || '追加中...'}</span>
+                          {progress > 0 && (
+                            <span className="text-xs font-black">{progress}%</span>
+                          )}
+                        </div>
                       </>
                     ) : (
                       <>
-                        <Plus size={20} />
+                        <Plus size={18} />
                         追加して読む
                       </>
                     )}
                   </button>
                 </form>
+              )}
+
+              {/* Progress Bar (shown during URL fetch or PDF upload) */}
+              {(isFetching || isUploadingPDF) && progress > 0 && (
+                <div className="mt-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium text-nexus-600 dark:text-nexus-400">
+                      {progressMessage}
+                    </span>
+                    <span className="text-sm font-black text-nexus-900 dark:text-nexus-100">
+                      {progress}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-nexus-100 dark:bg-nexus-800 rounded-full h-2.5 overflow-hidden shadow-inner">
+                    <div 
+                      className="bg-gradient-to-r from-nexus-900 to-nexus-700 dark:from-nexus-600 dark:to-nexus-500 h-2.5 rounded-full transition-all duration-500 ease-out shadow-sm"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                </div>
               )}
 
               {/* PDF Upload Area */}
