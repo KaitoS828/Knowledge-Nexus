@@ -1,4 +1,3 @@
-```
 import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store';
 import { TrendArticle } from '../types';
