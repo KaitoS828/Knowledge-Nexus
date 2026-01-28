@@ -9,6 +9,7 @@ import { BrainEditor } from './BrainEditor';
 import { KnowledgeGraph } from './KnowledgeGraph';
 import { SearchModal } from './SearchModal'; 
 import { DiscoverPage } from './DiscoverPage';
+import { TrendingSidebar } from './TrendingSidebar';
 import { fetchArticleContent } from '../services/geminiService';
 
 type TabId = 'discover' | 'articles' | 'diary' | 'reflection' | 'brain' | 'graph';
