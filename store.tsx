@@ -899,6 +899,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setModalState({ ...modalState, isOpen: false });
   };
 
+  // Onboarding
+  const setIsOnboarded = (value: boolean) => {
+    setState(prev => ({ ...prev, isOnboarded: value }));
+  };
+
   return (
     <AppContext.Provider value={{
       ...state,
@@ -938,7 +943,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       updatePreferences,
       deleteAccount,
       showAlert,
-      showConfirm
+      showConfirm,
+      setIsOnboarded
     }}>
       {children}
       <AlertModal
