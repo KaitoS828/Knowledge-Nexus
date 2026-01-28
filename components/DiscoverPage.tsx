@@ -3,6 +3,7 @@ import { useAppStore } from '../store';
 import { TrendArticle } from '../types';
 import { fetchAllTrends, fetchQiitaTrends, getPopularTags } from '../services/rssService';
 import { Compass, Loader2, BookmarkPlus, Sparkles, ExternalLink, Heart, Tag as TagIcon, Clock } from 'lucide-react';
+import { cleanExcerpt, QiitaLogo, ZennLogo } from '../utils/textUtils';
 
 export const DiscoverPage: React.FC = () => {
   const [articles, setArticles] = useState<TrendArticle[]>([]);
@@ -29,15 +30,17 @@ export const DiscoverPage: React.FC = () => {
     }
   };
 
-  // 後で読む（未解析で保存）
-  const handleSaveForLater = async (article: TrendArticle) => {
+  // 保存（裏でAI解析開始）
+  const handleSave = async (article: TrendArticle) => {
     try {
-      // 未解析のまま保存
+      const newArticleId = crypto.randomUUID();
+      
+      // 未解析で保存
       await addArticle({
-        id: crypto.randomUUID(),
+        id: newArticleId,
         url: article.url,
         title: article.title,
-        summary: article.excerpt || 'AI解析待ち...',
+        summary: cleanExcerpt(article.excerpt || ''),
         content: '',
         practiceGuide: '',
         status: 'pending',
@@ -48,40 +51,10 @@ export const DiscoverPage: React.FC = () => {
         analysisProgress: 0,
       });
       
-      alert('記事を保存しました！記事タブで確認できます。');
+      alert('記事を保存しました！記事タブで「AI解析を開始」ボタンから解析できます。');
     } catch (error) {
       console.error('Failed to save article:', error);
       alert('記事の保存に失敗しました');
-    }
-  };
-
-  // 解析して保存（バックグラウンドで解析）
-  const handleAnalyzeAndSave = async (article: TrendArticle) => {
-    try {
-      // 未解析で追加
-      const newArticleId = crypto.randomUUID();
-      await addArticle({
-        id: newArticleId,
-        url: article.url,
-        title: article.title,
-        summary: article.excerpt || 'AI解析中...',
-        content: '',
-        practiceGuide: '',
-        status: 'pending',
-        frequentWords: [],
-        tags: article.tags,
-        addedAt: new Date().toISOString(),
-        analysisStatus: 'analyzing',
-        analysisProgress: 10,
-      });
-      
-      alert('記事を追加しました！バックグラウンドでAI解析を開始します。');
-      
-      // TODO: Phase 2でバックグラウンド解析を実装
-      // analyzeArticleInBackground(newArticleId);
-    } catch (error) {
-      console.error('Failed to analyze article:', error);
-      alert('記事の追加に失敗しました');
     }
   };
 
@@ -162,13 +135,16 @@ export const DiscoverPage: React.FC = () => {
               {/* Source Badge */}
               <div className="p-4 pb-0">
                 <div className="flex items-center justify-between mb-3">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                    article.source === 'Qiita'
-                      ? 'bg-green-50 text-green-600 border border-green-200'
-                      : 'bg-blue-50 text-blue-600 border border-blue-200'
-                  }`}>
-                    {article.source}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    {article.source === 'Qiita' ? (
+                      <QiitaLogo size={20} />
+                    ) : (
+                      <ZennLogo size={20} />
+                    )}
+                    <span className="font-bold text-sm text-nexus-700 dark:text-nexus-300">
+                      {article.source}
+                    </span>
+                  </div>
                   <div className="flex items-center gap-1 text-nexus-500 text-xs">
                     <Heart size={14} />
                     <span className="font-semibold">{article.likes}</span>
@@ -180,10 +156,10 @@ export const DiscoverPage: React.FC = () => {
                   {article.title}
                 </h3>
 
-                {/* Excerpt */}
+                {/* Excerpt (cleaned) */}
                 {article.excerpt && (
                   <p className="text-sm text-nexus-600 dark:text-nexus-400 line-clamp-3 mb-3">
-                    {article.excerpt}
+                    {cleanExcerpt(article.excerpt)}
                   </p>
                 )}
 
@@ -199,32 +175,25 @@ export const DiscoverPage: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Author & Time */}
-                <div className="flex items-center gap-2 text-xs text-nexus-500 dark:text-nexus-400 mb-4">
+                {/* Author & Time (larger) */}
+                <div className="flex items-center gap-2 text-sm text-nexus-600 dark:text-nexus-400 mb-4">
                   <span className="font-medium">@{article.author}</span>
                   <span>•</span>
-                  <div className="flex items-center gap-1">
-                    <Clock size={12} />
+                  <div className="flex items-center gap-1.5 font-bold text-nexus-700 dark:text-nexus-300">
+                    <Clock size={14} />
                     <span>{getRelativeTime(article.publishedAt)}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="p-4 pt-0 flex gap-2">
+              {/* Action Button (Save only) */}
+              <div className="p-4 pt-0">
                 <button
-                  onClick={() => handleSaveForLater(article)}
-                  className="flex-1 px-4 py-2 bg-nexus-100 dark:bg-nexus-700 hover:bg-nexus-200 dark:hover:bg-nexus-600 text-nexus-900 dark:text-nexus-100 rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2"
+                  onClick={() => handleSave(article)}
+                  className="w-full px-4 py-3 bg-nexus-900 dark:bg-nexus-600 hover:bg-nexus-800 dark:hover:bg-nexus-500 text-white rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md"
                 >
-                  <BookmarkPlus size={16} />
-                  後で読む
-                </button>
-                <button
-                  onClick={() => handleAnalyzeAndSave(article)}
-                  className="flex-1 px-4 py-2 bg-nexus-900 dark:bg-nexus-600 hover:bg-nexus-800 dark:hover:bg-nexus-500 text-white rounded-lg font-medium text-sm transition-all flex items-center justify-center gap-2 shadow-md"
-                >
-                  <Sparkles size={16} />
-                  解析
+                  <BookmarkPlus size={18} />
+                  保存
                 </button>
               </div>
 
