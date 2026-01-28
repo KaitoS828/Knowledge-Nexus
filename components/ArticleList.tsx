@@ -513,6 +513,67 @@ export const ArticleList: React.FC = () => {
             ))}
             </div>
 
+            {/* 続きから学ぶ */}
+            {filteredArticles.filter(a => a.status === 'reading').length > 0 && (
+              <section className="mb-8">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <BookOpen size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-black text-nexus-900">📌 続きから学ぶ</h2>
+                    <p className="text-xs text-nexus-500">読書中の記事をここから再開</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {filteredArticles
+                    .filter(a => a.status === 'reading')
+                    .slice(0, 2)
+                    .map(article => (
+                      <div
+                        key={article.id}
+                        onClick={() => navigate(`/article/${article.id}`)}
+                        className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl p-5 cursor-pointer transition-all hover:shadow-xl hover:-translate-y-1 group"
+                      >
+                        <div className="flex justify-between items-start mb-3">
+                          <span className="px-3 py-1 bg-blue-600 text-white rounded-lg text-xs font-bold">
+                            読書中
+                          </span>
+                          <button
+                            onClick={(e) => handleDelete(e, article.id)}
+                            className="p-1.5 rounded-full text-nexus-300 hover:bg-red-50 hover:text-red-500 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+
+                        <h3 className="text-lg font-black text-nexus-900 dark:text-nexus-100 mb-2 line-clamp-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          {article.title}
+                        </h3>
+
+                        <p className="text-sm text-nexus-600 dark:text-nexus-400 line-clamp-2 mb-3">
+                          {article.summary}
+                        </p>
+
+                        <div className="flex items-center gap-2 text-xs text-nexus-500 dark:text-nexus-400">
+                          <Clock size={12} />
+                          <span>{new Date(article.addedAt).toLocaleDateString()}</span>
+                        </div>
+
+                        {/* Progress indicator */}
+                        <div className="mt-3 flex items-center gap-2">
+                          <div className="flex-1 bg-blue-200 dark:bg-blue-900 rounded-full h-1.5">
+                            <div className="bg-blue-600 dark:bg-blue-400 h-1.5 rounded-full w-1/2"></div>
+                          </div>
+                          <span className="text-xs font-bold text-blue-600 dark:text-blue-400">50%</span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </section>
+            )}
+
             {/* Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-10">
             {filteredArticles.length === 0 && documents.length === 0 && (
