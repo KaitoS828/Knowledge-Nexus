@@ -27,6 +27,10 @@ export const router = createBrowserRouter([
         element: <UnifiedDashboard />,
       },
       {
+        path: 'dashboard/:tab',
+        element: <UnifiedDashboard />,
+      },
+      {
         path: 'article/:id',
         element: <ArticleDetail />,
       },
