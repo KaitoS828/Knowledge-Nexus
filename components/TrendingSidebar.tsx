@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppStore } from '../store';
 import { TrendArticle } from '../types';
 import { fetchQiitaTrends } from '../services/rssService';
-import { Sparkles, TrendingUp, BookOpen, Clock, ExternalLink, BookmarkPlus, Lightbulb, BarChart3 } from 'lucide-react';
+import { Sparkles, TrendingUp, BookOpen, Clock, ExternalLink, BookmarkPlus, Lightbulb, BarChart3, Flame, Calendar } from 'lucide-react';
 import { cleanExcerpt } from '../utils/textUtils';
 
 export const TrendingSidebar: React.FC = () => {
