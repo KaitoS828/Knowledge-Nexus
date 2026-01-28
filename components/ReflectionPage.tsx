@@ -104,13 +104,13 @@ export const ReflectionPage: React.FC = () => {
     };
 
     return (
-        <div className="h-full flex flex-row bg-nexus-50 relative overflow-hidden">
-             {/* Decorative Background Elements for "Diagonal" feel */}
+        <div className="h-full flex flex-col bg-nexus-50 relative overflow-hidden">
+             {/* Decorative Background Elements */}
              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-indigo-100/40 to-transparent transform -skew-x-12 pointer-events-none z-0"></div>
              <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-purple-100/40 to-transparent transform -skew-x-12 pointer-events-none z-0"></div>
 
-            {/* Main Chat Area - Slim & Compact */}
-            <div className="flex-1 flex flex-col relative z-10 w-full transition-all duration-300">
+            {/* Main Chat Area */}
+            <div className="flex-1 flex flex-col relative z-10 w-full overflow-hidden">
                 {/* Header */}
                 <div className="flex-none p-4 border-b border-nexus-200 bg-white/80 backdrop-blur-md flex justify-between items-center">
                     <div className="flex items-center gap-3">
