@@ -104,38 +104,63 @@ export const ArticleList: React.FC = () => {
       // 1. Fast Fetch (Content Only)
       setProgress(20);
       setProgressMessage('記事コンテンツを読み込み中...');
+      
       const partialArticle = await fetchArticleContent(url);
+      
+      setProgress(40);
+      setProgressMessage('記事を保存中...');
+      
       const newId = crypto.randomUUID();
       const newArticle: Article = {
         ...partialArticle as Article,
         id: newId,
         status: 'new', // Initially new
         addedAt: new Date().toISOString(),
+        analysisStatus: 'analyzing',
+        analysisProgress: 60,
       };
       
-      setProgress(40);
-      setProgressMessage('記事を保存中...');
       addArticle(newArticle);
       setUrlInput('');
       
       setProgress(60);
       setProgressMessage('AIで解析中...');
+      
+      // 短い遅延を入れてUIを更新
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       setIsFetching(false);
 
       // 2. Background Analysis (Async)
+      setProgress(70);
+      setProgressMessage('AI解析を実行中...');
+      
       analyzeArticleContent(newArticle.content, preferences).then(analysis => {
           setProgress(90);
           setProgressMessage('解析結果を保存中...');
-          updateArticle(newId, analysis);
+          updateArticle(newId, {
+            ...analysis,
+            analysisStatus: 'completed',
+            analysisProgress: 100,
+          });
           setProgress(100);
           setProgressMessage('完了！');
           setTimeout(() => {
             setProgress(0);
             setProgressMessage('');
           }, 1000);
+      }).catch(error => {
+        console.error('Background analysis failed:', error);
+        updateArticle(newId, {
+          analysisStatus: 'completed',
+          analysisProgress: 100,
+        });
+        setProgress(0);
+        setProgressMessage('');
       });
 
     } catch (err: any) {
+      console.error('Process URL error:', err);
       setProgressMessage('エラーが発生しました');
       setTimeout(() => {
         setProgress(0);
