@@ -696,10 +696,46 @@ export const ArticleList: React.FC = () => {
                 {/* Pending Badge */}
                 {article.status === 'pending' && article.analysisStatus !== 'analyzing' && (
                   <div className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                    <span className="text-xs font-bold text-yellow-700 uppercase tracking-wider flex items-center gap-2">
-                      <Clock size={14} />
-                      PENDING - AI解析待ち
-                    </span>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-bold text-yellow-700 uppercase tracking-wider flex items-center gap-2">
+                        <Clock size={14} />
+                        PENDING - AI解析待ち
+                      </span>
+                    </div>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          // 解析中ステータスに変更
+                          updateArticle(article.id, {
+                            analysisStatus: 'analyzing',
+                            analysisProgress: 10,
+                          });
+
+                          // AI解析を実行
+                          const analysis = await analyzeArticleContent(article.content, preferences);
+                          
+                          // 解析結果を保存
+                          updateArticle(article.id, {
+                            ...analysis,
+                            status: 'new',
+                            analysisStatus: 'completed',
+                            analysisProgress: 100,
+                          });
+                        } catch (error) {
+                          console.error('Analysis failed:', error);
+                          alert('AI解析に失敗しました');
+                          updateArticle(article.id, {
+                            analysisStatus: 'pending',
+                            analysisProgress: 0,
+                          });
+                        }
+                      }}
+                      className="w-full mt-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-sm font-bold transition-all flex items-center justify-center gap-2"
+                    >
+                      <Sparkles size={16} />
+                      AI解析を開始
+                    </button>
                   </div>
                 )}
 
