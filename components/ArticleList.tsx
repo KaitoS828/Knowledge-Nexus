@@ -9,6 +9,7 @@ import { fetchArticleContent, analyzeArticleContent, getLearningRecommendations,
 import { processDocument } from '../services/pdfService';
 import { RightSidebar } from './RightSidebar';
 import { UpgradeModal } from './UpgradeModal';
+import { SearchModal } from './SearchModal';
 
 // Simple Heatmap Component
 const ActivityHeatmap = () => {
@@ -69,53 +70,40 @@ export const ArticleList: React.FC = () => {
   const [urlInput, setUrlInput] = useState('');
   const [isFetching, setIsFetching] = useState(false);
   const [filter, setFilter] = useState<'all' | 'new' | 'reading' | 'practice'>('all');
-  const [inputMode, setInputMode] = useState<'url' | 'pdf'>('url');
+  const [inputMode, setInputMode] = useState<'url' | 'pdf' | 'keyword'>('url');
   const [isUploadingPDF, setIsUploadingPDF] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Recommendation State
-  const [recommendation, setRecommendation] = useState<string | null>(null);
-  const [isAnalyzingRecs, setIsAnalyzingRecs] = useState(false);
+
+  // Search Modal State
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+
+  // Progress State for URL and PDF processing
+  const [progress, setProgress] = useState(0);
+  const [progressMessage, setProgressMessage] = useState('');
 
   // Upgrade Modal State
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [upgradeMessage, setUpgradeMessage] = useState<string | undefined>(undefined);
 
-  // AI Knowledge Query State
-  const [queryInput, setQueryInput] = useState('');
-  const [queryAnswer, setQueryAnswer] = useState<string | null>(null);
-  const [isQuerying, setIsQuerying] = useState(false);
+
 
   const isPro = subscription?.planType === 'pro';
 
 
-  const handleKnowledgeQuery = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!queryInput.trim()) return;
 
-    setIsQuerying(true);
-    try {
-      const response = await sendChatMessage(
-        queryInput,
-        'advisor',
-        '', // Combined article context isn't available here, prioritize brain
-        brain.content,
-        preferences
-      );
-      setQueryAnswer(response);
-    } catch (err) {
-      setQueryAnswer("回答の生成中にエラーが発生しました。");
-    } finally {
-      setIsQuerying(false);
-    }
-  };
 
   const processUrl = async (url: string) => {
     if (!url) return;
     setIsFetching(true);
+    setProgress(0);
+    setProgressMessage('記事を取得中...');
+    
     try {
       // 1. Fast Fetch (Content Only)
+      setProgress(20);
+      setProgressMessage('記事コンテンツを読み込み中...');
       const partialArticle = await fetchArticleContent(url);
       const newId = crypto.randomUUID();
       const newArticle: Article = {
@@ -125,16 +113,35 @@ export const ArticleList: React.FC = () => {
         addedAt: new Date().toISOString(),
       };
       
+      setProgress(40);
+      setProgressMessage('記事を保存中...');
       addArticle(newArticle);
       setUrlInput('');
+      
+      setProgress(60);
+      setProgressMessage('AIで解析中...');
       setIsFetching(false);
 
       // 2. Background Analysis (Async)
       analyzeArticleContent(newArticle.content, preferences).then(analysis => {
+          setProgress(90);
+          setProgressMessage('解析結果を保存中...');
           updateArticle(newId, analysis);
+          setProgress(100);
+          setProgressMessage('完了！');
+          setTimeout(() => {
+            setProgress(0);
+            setProgressMessage('');
+          }, 1000);
       });
 
     } catch (err: any) {
+      setProgressMessage('エラーが発生しました');
+      setTimeout(() => {
+        setProgress(0);
+        setProgressMessage('');
+      }, 2000);
+      
       if (err.message === 'Storage limit reached') {
         setShowUpgradeModal(true);
       } else {
@@ -156,13 +163,7 @@ export const ArticleList: React.FC = () => {
       }
   };
 
-  const handleGetRecommendations = async () => {
-      if (articles.length === 0) return;
-      setIsAnalyzingRecs(true);
-      const result = await getLearningRecommendations(brain.content, articles);
-      setRecommendation(result);
-      setIsAnalyzingRecs(false);
-  };
+
 
   const handlePDFUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -174,9 +175,16 @@ export const ArticleList: React.FC = () => {
     }
 
     setIsUploadingPDF(true);
+    setProgress(0);
+    setProgressMessage('PDFをアップロード中...');
+    
     try {
+      setProgress(30);
+      setProgressMessage('PDFの内容を解析中...');
       const result = await processDocument(file);
 
+      setProgress(70);
+      setProgressMessage('ドキュメントを保存中...');
       await addDocument({
         id: crypto.randomUUID(),
         name: file.name,
@@ -189,9 +197,21 @@ export const ArticleList: React.FC = () => {
         fileSize: file.size
       });
 
+      setProgress(100);
+      setProgressMessage('完了！');
       alert(`「${file.name}」の分析が完了しました`);
+      setTimeout(() => {
+        setProgress(0);
+        setProgressMessage('');
+      }, 1000);
     } catch (e: any) {
       console.error(e);
+      setProgressMessage('エラーが発生しました');
+      setTimeout(() => {
+        setProgress(0);
+        setProgressMessage('');
+      }, 2000);
+      
       if (e.message === 'Storage limit reached') {
         setShowUpgradeModal(true);
       } else {
@@ -275,116 +295,6 @@ export const ArticleList: React.FC = () => {
                 )}
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
-                {/* AI Knowledge Query (New Section) */}
-                <div className="bg-white rounded-3xl p-8 border border-nexus-200 shadow-sm flex flex-col h-80">
-                    <div className="flex items-center gap-2 mb-6">
-                        <div className="p-2 bg-nexus-900 rounded-lg text-white">
-                            <Sparkles size={20} />
-                        </div>
-                        <h3 className="text-xl font-bold text-nexus-900">自分の過去記録への質問</h3>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto mb-6 space-y-4 pr-2 custom-scrollbar">
-                        {!queryAnswer && !isQuerying && (
-                            <div className="h-full flex flex-col items-center justify-center text-center px-6">
-                                <Search size={40} className="text-nexus-200 mb-4" />
-                                <p className="text-nexus-400 text-sm font-medium leading-relaxed">
-                                    これまで保存した記事やBrainの内容について<br/>
-                                    AIに質問してみましょう。
-                                </p>
-                            </div>
-                        )}
-                        {queryAnswer && (
-                            <div className="bg-nexus-50 rounded-2xl p-6 border border-nexus-100 animate-in fade-in slide-in-from-bottom-2">
-                                <div className="prose prose-sm font-medium text-nexus-700 leading-relaxed max-w-none">
-                                    <ReactMarkdown>{queryAnswer}</ReactMarkdown>
-                                </div>
-                                <button 
-                                    onClick={() => setQueryAnswer(null)}
-                                    className="mt-6 text-[10px] font-black text-nexus-400 uppercase tracking-widest hover:text-nexus-900 transition-colors"
-                                >
-                                    回答をリセット
-                                </button>
-                            </div>
-                        )}
-                        {isQuerying && (
-                            <div className="flex flex-col items-center justify-center h-full gap-3">
-                                <Loader2 className="animate-spin text-nexus-900" size={32} />
-                                <p className="text-nexus-500 font-bold text-sm animate-pulse">知識を整理しています...</p>
-                            </div>
-                        )}
-                    </div>
-
-                    <form onSubmit={handleKnowledgeQuery} className="relative">
-                        <input
-                            type="text"
-                            value={queryInput}
-                            onChange={(e) => setQueryInput(e.target.value)}
-                            placeholder="例: 先月学んだReactの最適化について教えて"
-                            disabled={isQuerying}
-                            className="w-full bg-nexus-50 border border-nexus-100 rounded-2xl px-6 py-4 pr-16 text-nexus-900 font-medium focus:outline-none focus:ring-2 focus:ring-nexus-900 transition-all placeholder-nexus-300"
-                        />
-                        <button
-                            type="submit"
-                            disabled={!queryInput.trim() || isQuerying}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 p-3 bg-nexus-900 text-white rounded-xl hover:bg-black disabled:opacity-50 transition-all shadow-md active:scale-95"
-                        >
-                            <ArrowRight size={20} />
-                        </button>
-                    </form>
-                </div>
-
-                {/* Gap Analysis / Recommendations Widget */}
-                <div className="bg-gradient-to-br from-indigo-900 to-indigo-800 rounded-3xl p-8 text-white shadow-lg relative overflow-hidden flex flex-col h-80">
-                    <div className="absolute top-0 right-0 p-8 opacity-10">
-                        <Compass size={180} className="text-white" />
-                    </div>
-                    
-                    <div className="relative z-10 flex flex-col h-full">
-                        <div className="flex justify-between items-center mb-6">
-                            <h3 className="text-xl font-bold flex items-center gap-2">
-                                <Compass size={24} className="text-indigo-300" /> 次に学ぶべきことは？
-                            </h3>
-                            {!recommendation && (
-                                <button 
-                                    onClick={handleGetRecommendations}
-                                    disabled={isAnalyzingRecs || articles.length === 0}
-                                    className="bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 text-xs disabled:opacity-50 backdrop-blur-md"
-                                >
-                                    {isAnalyzingRecs ? <Loader2 size={14} className="animate-spin" /> : <Sparkles size={14} />}
-                                    解析を開始
-                                </button>
-                            )}
-                        </div>
-                        
-                        <div className="flex-1 overflow-y-auto custom-scrollbar-white pr-2">
-                            {recommendation ? (
-                                <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/10 text-indigo-50 leading-relaxed text-sm animate-in fade-in slide-in-from-top-2">
-                                    <ReactMarkdown 
-                                        components={{
-                                            h3: ({node, ...props}: any) => <h3 className="text-lg font-bold mt-4 mb-2 text-white" {...props} />,
-                                            strong: ({node, ...props}: any) => <strong className="text-indigo-200 font-bold" {...props} />,
-                                            ul: ({node, ...props}: any) => <ul className="list-disc pl-5 space-y-1 my-2" {...props} />,
-                                        }}
-                                    >
-                                        {recommendation}
-                                    </ReactMarkdown>
-                                    <button onClick={() => setRecommendation(null)} className="mt-6 text-[10px] font-black text-indigo-300 hover:text-white uppercase tracking-widest underline decoration-2 underline-offset-4 transition-colors">解析結果をクリア</button>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col items-center justify-center h-full text-center space-y-4 opacity-60">
-                                    <Sparkles size={48} className="text-indigo-300" />
-                                    <p className="text-indigo-100 text-sm max-w-xs font-medium leading-relaxed">
-                                        あなたのBrainの状態をAIが深層分析し、<br/>
-                                        最適な技術トピックをレコメンドします。
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
 
             {/* Input Area with Tabs */}
             <div className="bg-white p-6 rounded-2xl border border-nexus-200 shadow-md mb-10 transition-all hover:shadow-lg">
@@ -411,6 +321,13 @@ export const ArticleList: React.FC = () => {
                 >
                   <FileText size={16} />
                   PDFから追加
+                </button>
+                <button
+                  onClick={() => setIsSearchModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all bg-nexus-50 text-nexus-600 hover:bg-nexus-100"
+                >
+                  <Search size={16} />
+                  キーワードから追加
                 </button>
               </div>
 
@@ -656,6 +573,17 @@ export const ArticleList: React.FC = () => {
         onClose={() => setShowUpgradeModal(false)}
         message={upgradeMessage}
       />
+
+      {/* Search Modal */}
+      {isSearchModalOpen && (
+        <SearchModal
+          onClose={() => setIsSearchModalOpen(false)}
+          onAddArticle={async (url: string) => {
+            setIsSearchModalOpen(false);
+            await processUrl(url);
+          }}
+        />
+      )}
     </div>
   );
 };

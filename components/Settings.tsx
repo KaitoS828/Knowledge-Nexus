@@ -4,7 +4,7 @@ import { User, Shield, Brain, Laptop, Download, Trash2, Loader2, Sparkles, Type,
 import { useNavigate } from 'react-router-dom';
 
 export const Settings: React.FC = () => {
-    const { user, preferences, updatePreferences, deleteAccount, brain, articles, subscription, signOut } = useAppStore();
+    const { user, preferences, updatePreferences, deleteAccount, brain, articles, subscription, signOut, showConfirm, showAlert } = useAppStore();
     const [isExporting, setIsExporting] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
     const navigate = useNavigate();
@@ -22,7 +22,8 @@ export const Settings: React.FC = () => {
     };
 
     const handleLogout = async () => {
-        if (confirm('ログアウトしますか？')) {
+        const confirmed = await showConfirm('ログアウトしますか？', 'ログアウト');
+        if (confirmed) {
             setIsLoggingOut(true);
             await signOut();
             navigate('/');
@@ -67,6 +68,27 @@ export const Settings: React.FC = () => {
                             <h2 className="text-xl font-bold text-nexus-900 dark:text-nexus-50">アカウント管理</h2>
                         </div>
                         <div className="p-8 space-y-6">
+                            {/* Guest User Warning */}
+                            {user?.isGuest && (
+                                <div className="p-6 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-300 dark:border-yellow-700 rounded-2xl">
+                                    <div className="flex items-start gap-3">
+                                        <Shield size={24} className="text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                                        <div>
+                                            <h3 className="font-bold text-yellow-900 dark:text-yellow-100 mb-2">ゲストモードでご利用中</h3>
+                                            <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-3">
+                                                現在、ゲストモードでご利用いただいています。データの永続化やProプランへのアップグレードには、本登録（メールアドレス・パスワード）が必要です。
+                                            </p>
+                                            <button
+                                                onClick={() => showAlert('本登録機能は現在開発中です。しばらくお待ちください。', 'info', '開発中')}
+                                                className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-bold rounded-lg text-sm transition-colors"
+                                            >
+                                                本登録する
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div className="flex items-center justify-between p-4 bg-nexus-50 rounded-2xl border border-nexus-100">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 bg-nexus-900 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg ring-4 ring-white">

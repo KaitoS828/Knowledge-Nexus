@@ -427,6 +427,16 @@ export const ArticleDetail: React.FC = () => {
     p(props: any) {
         return <p {...props} className="mb-6 leading-loose text-nexus-800 text-[16px]" />
     },
+    img(props: any) {
+        return (
+            <img 
+                {...props} 
+                className="max-w-full h-auto rounded-xl my-6 shadow-md border border-nexus-200"
+                loading="lazy"
+                alt={props.alt || '記事内の画像'}
+            />
+        )
+    },
     h1: ({node, ...props}: any) => <h1 className="text-3xl font-bold mt-12 mb-6 text-nexus-900 border-b pb-4" {...props} />,
     h2: ({node, ...props}: any) => <h2 className="text-2xl font-bold mt-10 mb-5 text-nexus-900" {...props} />,
     h3: ({node, ...props}: any) => <h3 className="text-xl font-bold mt-8 mb-4 text-nexus-800" {...props} />,

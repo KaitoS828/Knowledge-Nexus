@@ -4,14 +4,21 @@ import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store';
 
 export const PricingPage: React.FC = () => {
-  const { subscription, user, upgradeToProMonthly, upgradeToProYearly } = useAppStore();
+  const { subscription, user, upgradeToProMonthly, upgradeToProYearly, showAlert } = useAppStore();
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [isUpgrading, setIsUpgrading] = useState(false);
 
   const handleUpgrade = async (cycle: 'monthly' | 'yearly') => {
     if (!user) {
-      alert('ログインが必要です');
+      await showAlert('ログインが必要です', 'error');
+      return;
+    }
+
+    // ゲストユーザーのチェック
+    if (user.isGuest) {
+      await showAlert('Proプランにアップグレードするには、本登録（メールアドレス・パスワード登録）が必要です。\n\nサイドバーの「Settings」から本登録を完了してください。', 'error', 'ゲストユーザー');
+      navigate('/settings');
       return;
     }
 
@@ -24,7 +31,7 @@ export const PricingPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Upgrade failed:', error);
-      alert('アップグレードに失敗しました');
+      await showAlert('アップグレードに失敗しました', 'error');
     } finally {
       setIsUpgrading(false);
     }

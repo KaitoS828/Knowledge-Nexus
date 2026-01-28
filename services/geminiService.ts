@@ -161,8 +161,10 @@ export const fetchArticleContent = async (url: string): Promise<Partial<Article>
             '.comments', '.comment-form', '[class*="widget"]',
             // Tags and metadata
             '.tags', '.categories', '.meta', '.post-meta', '.author-info',
-            // Images and figures (often contain noise)
-            'figure', 'figcaption'
+            // Avatar and profile images (not article content images)
+            '.avatar', '.profile-image', '[class*="author-avatar"]', '[class*="user-icon"]',
+            // Icon images (logos, social icons)
+            '[class*="logo"]', '[class*="icon"]:not([class*="article"])'
           ]
         })
       });
@@ -609,6 +611,90 @@ export const getLearningRecommendations = async (
         return response.text || "分析に失敗しました。";
     } catch (e) {
         return "エラーが発生しました。";
+    }
+};
+
+/**
+ * Search Result Interface
+ */
+export interface SearchResult {
+    title: string;
+    url: string;
+    source: 'Zenn' | 'note' | 'Qiita';
+    publishedDate?: string;
+    snippet?: string;
+}
+
+// Simple in-memory cache for search results
+const searchCache = new Map<string, { results: SearchResult[], timestamp: number }>();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Search articles by keyword from Zenn, note, and Qiita
+ * Uses Gemini Search API to find recent articles
+ * Results are cached for 5 minutes to improve performance
+ */
+export const searchArticlesByKeyword = async (
+    keyword: string
+): Promise<SearchResult[]> => {
+    if (!keyword.trim()) return [];
+
+    // Check cache first
+    const cacheKey = keyword.toLowerCase().trim();
+    const cached = searchCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        console.log('Using cached search results for:', keyword);
+        return cached.results;
+    }
+
+    try {
+        // Simplified and more concise prompt for faster response
+        const prompt = `キーワード「${keyword}」の技術記事を Zenn/note/Qiita から3件探してJSON形式で返してください。
+
+\`\`\`json
+[{"title":"タイトル","url":"https://完全URL","source":"Zenn","publishedDate":"2026-01-20","snippet":"要約"}]
+\`\`\`
+
+JSONのみ返し、他のテキストは不要です。`;
+
+        const response = await ai.models.generateContent({
+            model: TEXT_MODEL,
+            contents: prompt,
+            config: { 
+                tools: [{ googleSearch: {} }],
+                temperature: 0.3  // Lower temperature for faster, more deterministic results
+            }
+        });
+
+        const text = response.text || '';
+        
+        // Extract JSON from code block
+        const jsonMatch = text.match(/```json\n?([\s\S]*?)\n?```/);
+        
+        let results: SearchResult[] = [];
+        
+        if (jsonMatch && jsonMatch[1]) {
+            results = JSON.parse(jsonMatch[1]);
+        } else {
+            // Fallback: try to parse the entire response as JSON
+            try {
+                results = JSON.parse(text);
+            } catch {
+                console.warn('Could not parse search results as JSON');
+                results = [];
+            }
+        }
+
+        // Validate and filter results
+        results = Array.isArray(results) ? results.filter(r => r.title && r.url) : [];
+
+        // Cache the results
+        searchCache.set(cacheKey, { results, timestamp: Date.now() });
+
+        return results;
+    } catch (error) {
+        console.error('Article search failed:', error);
+        return [];
     }
 };
 

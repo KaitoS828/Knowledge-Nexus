@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { AppState, Article, Bookmark, DiaryEntry, LearningTweet, DocumentStoredUpload, Subscription, UsageSummary, UserPreferences } from './types';
 import { supabase } from './services/supabase';
+import { AlertModal } from './components/AlertModal';
 
 const INITIAL_BRAIN = `# 私のエンジニア外部脳
 
@@ -81,6 +82,9 @@ interface AppContextType extends AppState {
   refreshUsage: () => Promise<void>;
   updatePreferences: (updates: Partial<UserPreferences>) => Promise<void>;
   deleteAccount: () => Promise<void>;
+  // Alert & Confirm
+  showAlert: (message: string, type?: 'info' | 'success' | 'error', title?: string) => Promise<void>;
+  showConfirm: (message: string, title?: string) => Promise<boolean>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -95,6 +99,19 @@ export const useAppStore = () => {
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [state, setState] = useState<AppState>(INITIAL_STATE);
+  
+  // Modal state
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    type: 'info' | 'success' | 'error' | 'confirm';
+    title?: string;
+    message: string;
+    resolve?: (value: boolean) => void;
+  }>({
+    isOpen: false,
+    type: 'info',
+    message: '',
+  });
 
   // Initialize and check session
   useEffect(() => {
@@ -838,6 +855,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Alert Modal
+  const showAlert = (message: string, type: 'info' | 'success' | 'error' = 'info', title?: string): Promise<void> => {
+    return new Promise((resolve) => {
+      setModalState({
+        isOpen: true,
+        type,
+        title,
+        message,
+        resolve: () => {
+          resolve();
+        },
+      });
+    });
+  };
+
+  // Confirm Modal
+  const showConfirm = (message: string, title?: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setModalState({
+        isOpen: true,
+        type: 'confirm',
+        title,
+        message,
+        resolve,
+      });
+    });
+  };
+
+  const handleModalConfirm = () => {
+    if (modalState.resolve) {
+      modalState.resolve(true);
+    }
+    setModalState({ ...modalState, isOpen: false });
+  };
+
+  const handleModalCancel = () => {
+    if (modalState.resolve) {
+      modalState.resolve(false);
+    }
+    setModalState({ ...modalState, isOpen: false });
+  };
+
   return (
     <AppContext.Provider value={{
       ...state,
@@ -875,9 +934,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       logUsage,
       refreshUsage,
       updatePreferences,
-      deleteAccount
+      deleteAccount,
+      showAlert,
+      showConfirm
     }}>
       {children}
+      <AlertModal
+        isOpen={modalState.isOpen}
+        type={modalState.type}
+        title={modalState.title}
+        message={modalState.message}
+        onConfirm={handleModalConfirm}
+        onCancel={modalState.type === 'confirm' ? handleModalCancel : undefined}
+      />
     </AppContext.Provider>
   );
 };
