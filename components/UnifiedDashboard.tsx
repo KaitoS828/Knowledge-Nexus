@@ -10,6 +10,7 @@ import { KnowledgeGraph } from './KnowledgeGraph';
 import { SearchModal } from './SearchModal'; 
 import { DiscoverPage } from './DiscoverPage';
 import { TrendingSidebar } from './TrendingSidebar';
+import { OnboardingModal } from './OnboardingModal';
 import { fetchArticleContent } from '../services/geminiService';
 
 type TabId = 'discover' | 'articles' | 'diary' | 'reflection' | 'brain' | 'graph';
@@ -201,6 +202,12 @@ export const UnifiedDashboard: React.FC = () => {
           onAddArticle={handleAddArticle}
         />
       )}
+
+      {/* Onboarding Modal */}
+      <OnboardingModal 
+        isOpen={!isOnboarded}
+        onClose={() => {}}
+      />
     </div>
   );
 };
