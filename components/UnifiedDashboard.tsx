@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAppStore } from '../store';
 import { Book, PenTool, MessageCircle, Brain, Activity, Plus, Search, User, Crown, Settings as SettingsIcon } from 'lucide-react';
 import { ArticleList } from './ArticleList';
@@ -31,11 +31,28 @@ const TABS: Tab[] = [
 ];
 
 export const UnifiedDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<TabId>('articles');
+  const { tab } = useParams<{ tab?: TabId }>();
+  const [activeTab, setActiveTab] = useState<TabId>(tab || 'discover');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const { user, subscription, addArticle, isOnboarded } = useAppStore();
   const navigate = useNavigate();
   const isPro = subscription?.planType === 'pro';
+
+  // URL同期: URLが変わったらタブを同期
+  useEffect(() => {
+    if (tab && tab !== activeTab) {
+      setActiveTab(tab);
+    } else if (!tab) {
+      // /dashboard のみの場合は discover にリダイレクト
+      navigate('/dashboard/discover', { replace: true });
+    }
+  }, [tab]);
+
+  // タブ切り替え時にURLを変更
+  const handleTabChange = (tabId: TabId) => {
+    setActiveTab(tabId);
+    navigate(`/dashboard/${tabId}`);
+  };
 
   // Keyboard shortcut: / key to open search
   useEffect(() => {
