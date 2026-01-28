@@ -183,9 +183,15 @@ export const UnifiedDashboard: React.FC = () => {
         </nav>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        {renderTabContent()}
+      {/* Main Content - 3 Column Layout */}
+      <main className="flex-1 flex overflow-hidden">
+        {/* Center: Tab Content */}
+        <div className="flex-1 overflow-auto">
+          {renderTabContent()}
+        </div>
+
+        {/* Right Sidebar: Trending */}
+        <TrendingSidebar />
       </main>
 
       {/* Search Modal */}
