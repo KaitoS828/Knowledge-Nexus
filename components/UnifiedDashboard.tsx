@@ -213,8 +213,10 @@ export const UnifiedDashboard: React.FC = () => {
           {activeTab === 'graph' && <KnowledgeGraph />}
         </div>
 
-        {/* Right Sidebar: Trending */}
-        <TrendingSidebar />
+        {/* Right Sidebar: Trending - Only show on Discover and Articles tabs */}
+        {(activeTab === 'discover' || activeTab === 'articles') && (
+          <TrendingSidebar />
+        )}
       </main>
 
       {/* Search Modal */}
