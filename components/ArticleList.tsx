@@ -393,20 +393,61 @@ export const ArticleList: React.FC = () => {
 
               {/* Progress Bar (shown during URL fetch or PDF upload) */}
               {(isFetching || isUploadingPDF) && progress > 0 && (
-                <div className="mt-4 animate-in fade-in slide-in-from-top-2">
+                <div className="mt-4 p-4 bg-nexus-50 dark:bg-nexus-800 rounded-xl border border-nexus-200 dark:border-nexus-700 animate-in fade-in slide-in-from-top-2">
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-nexus-600 dark:text-nexus-400">
+                    <span className="text-sm font-bold text-nexus-900 dark:text-nexus-100">
                       {progressMessage}
                     </span>
-                    <span className="text-sm font-black text-nexus-900 dark:text-nexus-100">
+                    <span className="text-lg font-black text-nexus-900 dark:text-nexus-100">
                       {progress}%
                     </span>
                   </div>
-                  <div className="w-full bg-nexus-100 dark:bg-nexus-800 rounded-full h-2.5 overflow-hidden shadow-inner">
+                  
+                  {/* Progress Bar */}
+                  <div className="w-full bg-nexus-200 dark:bg-nexus-700 rounded-full h-3 overflow-hidden shadow-inner mb-3">
                     <div 
-                      className="bg-gradient-to-r from-nexus-900 to-nexus-700 dark:from-nexus-600 dark:to-nexus-500 h-2.5 rounded-full transition-all duration-500 ease-out shadow-sm"
+                      className="bg-gradient-to-r from-nexus-900 to-nexus-700 dark:from-nexus-500 dark:to-nexus-400 h-3 rounded-full transition-all duration-500 ease-out shadow-sm"
                       style={{ width: `${progress}%` }}
                     />
+                  </div>
+
+                  {/* Progress Steps */}
+                  <div className="text-xs text-nexus-500 dark:text-nexus-400 space-y-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className={progress >= 0 ? 'text-nexus-900 dark:text-nexus-100 font-semibold' : ''}>
+                        0% → 記事を取得中
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={progress >= 20 ? 'text-nexus-900 dark:text-nexus-100 font-semibold' : ''}>
+                        20% → 記事コンテンツを読み込み中
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={progress >= 40 ? 'text-nexus-900 dark:text-nexus-100 font-semibold' : ''}>
+                        40% → 記事を保存中
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={progress >= 60 ? 'text-nexus-900 dark:text-nexus-100 font-semibold' : ''}>
+                        60% → AIで解析中
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={progress >= 70 ? 'text-nexus-900 dark:text-nexus-100 font-semibold' : ''}>
+                        70% → AI解析を実行中
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={progress >= 90 ? 'text-nexus-900 dark:text-nexus-100 font-semibold' : ''}>
+                        90% → 解析結果を保存中
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={progress >= 100 ? 'text-nexus-900 dark:text-nexus-100 font-semibold' : ''}>
+                        100% → 完了！
+                      </span>
+                    </div>
                   </div>
                 </div>
               )}
