@@ -33,7 +33,7 @@ const TABS: Tab[] = [
 export const UnifiedDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<TabId>('articles');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
-  const { user, subscription, addArticle } = useAppStore();
+  const { user, subscription, addArticle, isOnboarded } = useAppStore();
   const navigate = useNavigate();
   const isPro = subscription?.planType === 'pro';
 
