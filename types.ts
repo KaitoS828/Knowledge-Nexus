@@ -1,4 +1,4 @@
-export type ArticleStatus = 'new' | 'reading' | 'practice' | 'mastered';
+export type ArticleStatus = 'pending' | 'new' | 'reading' | 'practice' | 'mastered';
 
 export interface FrequentWord {
   word: string;
@@ -18,6 +18,9 @@ export interface Article {
   tags: string[]; // AI generated tags
   addedAt: string;
   isTestPassed?: boolean;
+  // 解析進捗
+  analysisProgress?: number; // 0-100
+  analysisStatus?: 'pending' | 'analyzing' | 'completed';
 }
 
 export interface QuizQuestion {
@@ -153,4 +156,18 @@ export interface AppState {
   preferences: UserPreferences;
   isOnboarded: boolean;
   isLoading: boolean;
+}
+
+// Trend Article (未解析記事 - ディスカバー用)
+export interface TrendArticle {
+  id: string;
+  title: string;
+  url: string;
+  author: string;
+  publishedAt: string;
+  tags: string[];
+  thumbnail?: string;
+  likes: number;
+  source: 'Zenn' | 'Qiita';
+  excerpt?: string;
 }

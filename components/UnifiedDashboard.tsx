@@ -7,10 +7,11 @@ import { LearningDiary } from './LearningDiary';
 import { ReflectionPage } from './ReflectionPage';
 import { BrainEditor } from './BrainEditor';
 import { KnowledgeGraph } from './KnowledgeGraph';
-import { SearchModal } from './SearchModal';
+import { SearchModal } from './SearchModal'; 
+import { DiscoverPage } from './DiscoverPage';
 import { fetchArticleContent } from '../services/geminiService';
 
-type TabId = 'articles' | 'diary' | 'reflection' | 'brain' | 'graph';
+type TabId = 'discover' | 'articles' | 'diary' | 'reflection' | 'brain' | 'graph';
 
 interface Tab {
   id: TabId;
@@ -19,6 +20,7 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
+  { id: 'discover', label: 'ディスカバー', icon: Search },
   { id: 'articles', label: '記事', icon: Book },
   { id: 'diary', label: '学習日記', icon: PenTool },
   { id: 'reflection', label: '内省', icon: MessageCircle },
@@ -75,6 +77,8 @@ export const UnifiedDashboard: React.FC = () => {
 
   const renderTabContent = () => {
     switch (activeTab) {
+      case 'discover':
+        return <DiscoverPage />;
       case 'articles':
         return <ArticleList />;
       case 'diary':

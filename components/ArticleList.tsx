@@ -523,6 +523,37 @@ export const ArticleList: React.FC = () => {
                     {article.title}
                 </h3>
 
+                {/* Analysis Progress Bar */}
+                {article.analysisStatus === 'analyzing' && article.analysisProgress !== undefined && (
+                  <div className="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-bold text-blue-700 flex items-center gap-1.5">
+                        <Loader2 size={12} className="animate-spin" />
+                        AI解析中...
+                      </span>
+                      <span className="text-xs font-black text-blue-900">
+                        {article.analysisProgress}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-blue-200 rounded-full h-2.5 overflow-hidden shadow-inner">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2.5 rounded-full transition-all duration-500 ease-out shadow-sm"
+                        style={{ width: `${article.analysisProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Pending Badge */}
+                {article.status === 'pending' && article.analysisStatus !== 'analyzing' && (
+                  <div className="mb-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <span className="text-xs font-bold text-yellow-700 uppercase tracking-wider flex items-center gap-2">
+                      <Clock size={14} />
+                      PENDING - AI解析待ち
+                    </span>
+                  </div>
+                )}
+
                 {article.tags && article.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2 mb-4">
                         {article.tags.slice(0, 3).map((tag, i) => (
