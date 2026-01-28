@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppStore } from '../store';
 import { Article } from '../types';
-import { Plus, Search, BookOpen, CheckCircle, Clock, Flame, Trophy, Hash, Loader2, Trash2, Compass, ArrowRight, Sparkles, Upload, Link, FileText } from 'lucide-react';
+import { Plus, Search, BookOpen, CheckCircle, Clock, Flame, Trophy, Hash, Loader2, Trash2, Compass, ArrowRight, Sparkles, Upload, Link, FileText, Book, Crown } from 'lucide-react';
 import { fetchArticleContent, analyzeArticleContent, getLearningRecommendations, sendChatMessage } from '../services/geminiService';
 import { processDocument } from '../services/pdfService';
 import { RightSidebar } from './RightSidebar';
@@ -294,28 +294,25 @@ export const ArticleList: React.FC = () => {
       {/* Main Content Area */}
       <div className="flex-1 h-full overflow-y-auto p-4 md:p-8 text-nexus-900 pb-20 lg:pb-8">
         <div className="max-w-6xl mx-auto">
-            {/* Redesigned Header */}
-            <header className="mb-10 flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-8 rounded-[32px] border border-nexus-200 shadow-sm overflow-hidden relative">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-nexus-50/50 rounded-full blur-3xl -z-10 -translate-y-1/2 translate-x-1/3"></div>
-                
-                <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                        <h1 className="text-3xl font-black text-nexus-900 tracking-tight">マイ・インテリジェンス</h1>
-                        <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${isPro ? 'bg-gradient-to-r from-yellow-100 to-amber-100 text-amber-700 border border-amber-200' : 'bg-gray-100 text-gray-500 border border-gray-200'}`}>
-                            {isPro ? 'Pro Member' : 'Free Plan'}
-                        </span>
-                    </div>
-                    <p className="text-nexus-500 font-medium">個人の知識を資産に変える、あなたのプライベートナレッジスペース。</p>
+            {/* Compact Header */}
+            <header className="mb-6 flex justify-between items-center">
+                <div>
+                    <h1 className="text-2xl font-black text-nexus-900 flex items-center gap-2">
+                        <Book size={24} />
+                        記事ライブラリ
+                    </h1>
+                    <p className="text-sm text-nexus-600 mt-1">
+                        あなたの知識を蓄積し、AIが深く分析します
+                    </p>
                 </div>
                 
                 {!isPro && (
                   <button 
                     onClick={() => navigate('/pricing')}
-                    className="flex items-center gap-3 px-6 py-4 bg-nexus-900 text-white rounded-2xl font-black text-sm hover:shadow-xl hover:-translate-y-0.5 transition-all group"
+                    className="flex items-center gap-2 px-4 py-2 bg-nexus-900 text-white rounded-xl font-bold text-sm hover:shadow-lg transition-all"
                   >
-                    <Sparkles size={18} className="text-yellow-400" />
-                    Proにアップグレード
-                    <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+                    <Crown size={16} />
+                    PROプラン
                   </button>
                 )}
             </header>
