@@ -204,8 +204,13 @@ export const UnifiedDashboard: React.FC = () => {
       {/* Main Content - 3 Column Layout */}
       <main className="flex-1 flex overflow-hidden">
         {/* Center: Tab Content */}
-        <div className="flex-1 overflow-auto">
-          {renderTabContent()}
+        <div className="flex-1 h-full overflow-hidden">
+          {activeTab === 'discover' && <DiscoverPage />}
+          {activeTab === 'articles' && <ArticleList />}
+          {activeTab === 'diary' && <LearningDiary />}
+          {activeTab === 'brain' && <BrainEditor />}
+          {activeTab === 'reflection' && <ReflectionPage />}
+          {activeTab === 'graph' && <KnowledgeGraph />}
         </div>
 
         {/* Right Sidebar: Trending */}

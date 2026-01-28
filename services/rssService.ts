@@ -5,13 +5,142 @@ const cache = new Map<string, { data: TrendArticle[], timestamp: number }>();
 const CACHE_DURATION = 10 * 60 * 1000; // 10分
 
 /**
- * Zennのトレンド記事を取得
- * 注: Zenn APIは公式に提供されていないため、現在は未実装
- * 将来的にFirecrawlなどを使用してスクレイピング実装予定
+ * ZennのRSSフィードを取得
  */
 export const fetchZennTrends = async (tag?: string): Promise<TrendArticle[]> => {
-  // 今は空配列を返す（将来実装）
-  return [];
+  const cacheKey = `zenn_${tag || 'all'}`;
+  const cached = cache.get(cacheKey);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+
+  try {
+    // ZennのトレンドRSSフィード
+    const url = tag 
+      ? `https://zenn.dev/topics/${tag}/feed`
+      : 'https://zenn.dev/feed';
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Zenn RSS failed');
+    
+    const text = await response.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(text, 'text/xml');
+    
+    const items = Array.from(xmlDoc.querySelectorAll('item'));
+    const trendArticles: TrendArticle[] = items.slice(0, 20).map((item, index) => {
+      const title = item.querySelector('title')?.textContent || '';
+      const link = item.querySelector('link')?.textContent || '';
+      const pubDate = item.querySelector('pubDate')?.textContent || new Date().toISOString();
+      const description = item.querySelector('description')?.textContent || '';
+      const creator = item.querySelector('creator')?.textContent || 'Unknown';
+      
+      return {
+        id: `zenn-${index}-${Date.now()}`,
+        title,
+        url: link,
+        author: creator,
+        publishedAt: new Date(pubDate).toISOString(),
+        tags: tag ? [tag] : [],
+        likes: Math.floor(Math.random() * 100), // Zenn APIがないので仮の値
+        source: 'Zenn' as const,
+        excerpt: description.substring(0, 150)
+      };
+    });
+
+    cache.set(cacheKey, { data: trendArticles, timestamp: Date.now() });
+    return trendArticles;
+  } catch (error) {
+    console.error('Failed to fetch Zenn trends:', error);
+    return [];
+  }
+};
+
+/**
+ * noteのRSSフィードを取得
+ */
+export const fetchNoteTrends = async (): Promise<TrendArticle[]> => {
+  const cacheKey = 'note_all';
+  const cached = cache.get(cacheKey);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+
+  try {
+    // noteの人気記事RSS（テクノロジー系）
+    const response = await fetch('https://note.com/api/v2/hashtags/tech/notes?order=trend');
+    if (!response.ok) throw new Error('note API failed');
+    
+    const data = await response.json();
+    const trendArticles: TrendArticle[] = (data.data?.contents || []).slice(0, 20).map((item: any, index: number) => ({
+      id: `note-${item.id || index}`,
+      title: item.name || 'Untitled',
+      url: `https://note.com/n/${item.key}`,
+      author: item.user?.nickname || 'Unknown',
+      publishedAt: item.publishAt || new Date().toISOString(),
+      tags: ['tech'],
+      likes: item.likeCount || 0,
+      source: 'note' as const,
+      excerpt: item.body?.substring(0, 150) || ''
+    }));
+
+    cache.set(cacheKey, { data: trendArticles, timestamp: Date.now() });
+    return trendArticles;
+  } catch (error) {
+    console.error('Failed to fetch note trends:', error);
+    return [];
+  }
+};
+
+/**
+ * はてなブログのRSSフィードを取得
+ */
+export const fetchHatenaTrends = async (): Promise<TrendArticle[]> => {
+  const cacheKey = 'hatena_all';
+  const cached = cache.get(cacheKey);
+  
+  if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+    return cached.data;
+  }
+
+  try {
+    // はてなブログのホットエントリー（テクノロジー）
+    const response = await fetch('https://b.hatena.ne.jp/hotentry/it.rss');
+    if (!response.ok) throw new Error('Hatena RSS failed');
+    
+    const text = await response.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(text, 'text/xml');
+    
+    const items = Array.from(xmlDoc.querySelectorAll('item'));
+    const trendArticles: TrendArticle[] = items.slice(0, 20).map((item, index) => {
+      const title = item.querySelector('title')?.textContent || '';
+      const link = item.querySelector('link')?.textContent || '';
+      const pubDate = item.querySelector('pubDate')?.textContent || new Date().toISOString();
+      const description = item.querySelector('description')?.textContent || '';
+      const bookmarkCount = item.querySelector('bookmarkcount')?.textContent || '0';
+      
+      return {
+        id: `hatena-${index}-${Date.now()}`,
+        title,
+        url: link,
+        author: 'はてな',
+        publishedAt: new Date(pubDate).toISOString(),
+        tags: ['it'],
+        likes: parseInt(bookmarkCount),
+        source: 'はてな' as const,
+        excerpt: description.substring(0, 150)
+      };
+    });
+
+    cache.set(cacheKey, { data: trendArticles, timestamp: Date.now() });
+    return trendArticles;
+  } catch (error) {
+    console.error('Failed to fetch Hatena trends:', error);
+    return [];
+  }
 };
 
 /**
@@ -62,18 +191,20 @@ export const fetchQiitaTrends = async (tag?: string): Promise<TrendArticle[]> =>
 };
 
 /**
- * すべてのトレンド記事を取得（Zenn + Qiita）
+ * すべてのトレンド記事を取得（Zenn + Qiita + note + はてな）
  */
 export const fetchAllTrends = async (tag?: string): Promise<TrendArticle[]> => {
   try {
     // 並列で取得
-    const [zennArticles, qiitaArticles] = await Promise.all([
+    const [zennArticles, qiitaArticles, noteArticles, hatenaArticles] = await Promise.all([
       fetchZennTrends(tag),
-      fetchQiitaTrends(tag)
+      fetchQiitaTrends(tag),
+      fetchNoteTrends(),
+      fetchHatenaTrends()
     ]);
 
     // マージして日付でソート
-    const allArticles = [...zennArticles, ...qiitaArticles];
+    const allArticles = [...zennArticles, ...qiitaArticles, ...noteArticles, ...hatenaArticles];
     allArticles.sort((a, b) => 
       new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
     );

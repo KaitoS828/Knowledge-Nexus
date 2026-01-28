@@ -104,7 +104,7 @@ export const ReflectionPage: React.FC = () => {
     };
 
     return (
-        <div className="h-screen flex flex-row bg-nexus-50 relative overflow-hidden">
+        <div className="h-full flex flex-row bg-nexus-50 relative overflow-hidden">
              {/* Decorative Background Elements for "Diagonal" feel */}
              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-indigo-100/40 to-transparent transform -skew-x-12 pointer-events-none z-0"></div>
              <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-purple-100/40 to-transparent transform -skew-x-12 pointer-events-none z-0"></div>

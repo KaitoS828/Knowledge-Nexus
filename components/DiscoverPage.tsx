@@ -132,14 +132,21 @@ export const DiscoverPage: React.FC = () => {
               key={article.id}
               className="bg-white dark:bg-nexus-800 rounded-2xl border border-nexus-200 dark:border-nexus-700 overflow-hidden hover:shadow-lg transition-all group"
             >
-              {/* Source Badge */}
               <div className="p-4 pb-0">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     {article.source === 'Qiita' ? (
                       <QiitaLogo size={20} />
-                    ) : (
+                    ) : article.source === 'Zenn' ? (
                       <ZennLogo size={20} />
+                    ) : article.source === 'note' ? (
+                      <div className="w-5 h-5 bg-green-500 rounded flex items-center justify-center">
+                        <span className="text-white font-bold text-xs">n</span>
+                      </div>
+                    ) : (
+                      <div className="w-5 h-5 bg-blue-400 rounded flex items-center justify-center">
+                        <span className="text-white font-bold text-xs">B</span>
+                      </div>
                     )}
                     <span className="font-bold text-sm text-nexus-700 dark:text-nexus-300">
                       {article.source}

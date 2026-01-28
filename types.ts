@@ -168,6 +168,6 @@ export interface TrendArticle {
   tags: string[];
   thumbnail?: string;
   likes: number;
-  source: 'Zenn' | 'Qiita';
+  source: 'Zenn' | 'Qiita' | 'note' | 'はてな';
   excerpt?: string;
 }
