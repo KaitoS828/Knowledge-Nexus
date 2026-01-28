@@ -104,7 +104,7 @@ export const ReflectionPage: React.FC = () => {
     };
 
     return (
-        <div className="h-full flex flex-row bg-nexus-50 relative overflow-hidden">
+        <div className="h-screen flex flex-row bg-nexus-50 relative overflow-hidden">
              {/* Decorative Background Elements for "Diagonal" feel */}
              <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-indigo-100/40 to-transparent transform -skew-x-12 pointer-events-none z-0"></div>
              <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-gradient-to-tr from-purple-100/40 to-transparent transform -skew-x-12 pointer-events-none z-0"></div>
@@ -148,49 +148,34 @@ export const ReflectionPage: React.FC = () => {
                                         ? 'bg-nexus-900 text-white' 
                                         : 'bg-indigo-100 text-indigo-600'
                                     }`}>
-                                        {msg.role === 'user' ? (
-                                            user?.user_metadata?.avatar_url ? (
-                                                <img src={user.user_metadata.avatar_url} alt="me" className="w-full h-full rounded-full object-cover" />
-                                            ) : <User size={14} />
-                                        ) : (
-                                            <Sparkles size={14} />
-                                        )}
+                                        {msg.role === 'user' ? <User size={14} /> : <Sparkles size={14} />}
                                     </div>
 
-                                    {/* Bubble */}
-                                    <div className={`
-                                        relative p-4 rounded-2xl shadow-sm leading-relaxed text-sm
-                                        ${msg.role === 'user' 
-                                            ? 'bg-white text-nexus-900 rounded-tr-none' 
-                                            : 'bg-white text-nexus-900 rounded-tl-none border border-indigo-50/50'
-                                        }
-                                    `}>
-                                        <ReactMarkdown 
-                                            components={{
-                                                code({node, inline, className, children, ...props}: any) {
-                                                    return !inline ? (
-                                                        <div className="bg-nexus-900 text-white p-2 rounded-lg my-2 text-xs font-mono overflow-x-auto">
-                                                            <code {...props}>{children}</code>
-                                                        </div>
-                                                    ) : (
-                                                        <code className="bg-nexus-100 text-nexus-800 px-1 py-0.5 rounded text-xs font-mono" {...props}>
-                                                            {children}
-                                                        </code>
-                                                    )
-                                                },
-                                                p: ({children}) => <p className="mb-2 last:mb-0">{children}</p>,
-                                                ul: ({children}) => <ul className="list-disc pl-4 mb-2">{children}</ul>,
-                                                ol: ({children}) => <ol className="list-decimal pl-4 mb-2">{children}</ol>,
-                                                a: ({href, children}) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline font-bold">{children}</a>,
-                                            }}
-                                        >
-                                            {msg.content}
-                                        </ReactMarkdown>
-                                        
-                                         {/* Timestamp */}
-                                        <div className={`text-[10px] text-nexus-400 mt-1 font-medium ${msg.role === 'user' ? 'text-right' : 'text-left'}`}>
-                                            {new Date(msg.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                        </div>
+                                    {/* Message Bubble */}
+                                    <div className={`${
+                                        msg.role === 'user' 
+                                        ? 'bg-nexus-900 text-white rounded-2xl rounded-tr-none' 
+                                        : 'bg-white/80 text-nexus-900 rounded-2xl rounded-tl-none border border-indigo-50/50'
+                                    } p-3 shadow-sm`}>
+                                        {msg.role === 'model' ? (
+                                            <div className="prose prose-sm max-w-none">
+                                                <ReactMarkdown
+                                                    components={{
+                                                        h1: ({children}) => <h4 className="font-black text-nexus-900 mb-2 mt-2 text-sm">{children}</h4>,
+                                                        h2: ({children}) => <h5 className="font-bold text-nexus-900 mb-1 mt-2 text-xs">{children}</h5>,
+                                                        ul: ({children}) => <ul className="list-disc pl-4 space-y-0.5 mb-2 text-xs">{children}</ul>,
+                                                        li: ({children}) => <li className="text-nexus-700">{children}</li>,
+                                                        p: ({children}) => <p className="mb-2 last:mb-0 text-xs leading-relaxed">{children}</p>,
+                                                        strong: ({children}) => <span className="font-bold text-indigo-700 bg-indigo-50/50 px-0.5 rounded">{children}</span>,
+                                                        code: ({children}) => <code className="bg-nexus-100 px-1 py-0.5 rounded text-nexus-700 font-mono text-xs">{children}</code>,
+                                                    }}
+                                                >
+                                                    {msg.content}
+                                                </ReactMarkdown>
+                                            </div>
+                                        ) : (
+                                            <p className="text-xs font-medium whitespace-pre-wrap">{msg.content}</p>
+                                        )}
                                     </div>
                                 </div>
                             </div>
