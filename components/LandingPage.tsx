@@ -173,6 +173,91 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section className="py-32 bg-nexus-50/50" id="pricing">
+        <div className="max-w-5xl mx-auto px-6">
+            <div className="text-center mb-20 leading-tight">
+                <h2 className="text-4xl font-black text-nexus-900 tracking-tight mb-6">シンプルな料金プラン</h2>
+                <p className="text-nexus-500 font-medium">まずは無料で、AIによる知識管理を体験してください。</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                {/* Free Plan */}
+                <div className="p-10 bg-white rounded-[40px] border border-nexus-100 shadow-xl shadow-nexus-900/5 relative overflow-hidden group hover:border-nexus-200 transition-all flex flex-col">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-nexus-200"></div>
+                    <h3 className="text-2xl font-black text-nexus-900 mb-2">Free</h3>
+                    <div className="flex items-baseline gap-1 mb-6">
+                        <span className="text-5xl font-black text-nexus-900">¥0</span>
+                        <span className="text-nexus-400 font-bold">/月</span>
+                    </div>
+                    <p className="text-nexus-500 font-medium mb-10 leading-relaxed">
+                        個人での学習記録と、<br/>AIによる基本的なサポートに。
+                    </p>
+                    <ul className="space-y-4 mb-10 flex-grow">
+                        <li className="flex items-center gap-3 text-nexus-600 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-nexus-900" />
+                            月間10回までのAI解析
+                        </li>
+                        <li className="flex items-center gap-3 text-nexus-600 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-nexus-900" />
+                            最大2件のナレッジ保存
+                        </li>
+                        <li className="flex items-center gap-3 text-nexus-600 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-nexus-900" />
+                            基本的なクイズ生成
+                        </li>
+                    </ul>
+                    <button
+                        onClick={() => setIsAuthModalOpen(true)}
+                        className="w-full py-4 bg-nexus-100 text-nexus-900 rounded-2xl font-black text-lg hover:bg-nexus-200 transition-all uppercase tracking-widest"
+                    >
+                        無料で始める
+                    </button>
+                </div>
+
+                {/* Pro Plan */}
+                <div className="p-10 bg-nexus-900 text-white rounded-[40px] shadow-2xl shadow-nexus-900/20 relative overflow-hidden transform md:-translate-y-4 flex flex-col">
+                    <div className="absolute top-0 right-0 bg-gradient-to-bl from-indigo-500 to-purple-500 w-32 h-32 blur-3xl opacity-50"></div>
+                    <div className="absolute top-6 right-6 px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-black uppercase tracking-widest border border-white/10">
+                        Popular
+                    </div>
+                    <h3 className="text-2xl font-black mb-2">Pro</h3>
+                    <div className="flex items-baseline gap-1 mb-6">
+                        <span className="text-5xl font-black">¥980</span>
+                        <span className="text-white/60 font-bold">/月</span>
+                    </div>
+                    <p className="text-white/60 font-medium mb-10 leading-relaxed">
+                        制限のない学習と、<br/>高度なAIモデルの活用に。
+                    </p>
+                    <ul className="space-y-4 mb-10 flex-grow">
+                        <li className="flex items-center gap-3 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-indigo-400" />
+                            無制限のAI解析
+                        </li>
+                        <li className="flex items-center gap-3 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-indigo-400" />
+                            無制限のナレッジ保存
+                        </li>
+                        <li className="flex items-center gap-3 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-indigo-400" />
+                            高度な推論モデル (GPT-4o等)
+                        </li>
+                        <li className="flex items-center gap-3 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-indigo-400" />
+                            優先サポート
+                        </li>
+                    </ul>
+                    <button
+                        onClick={() => setIsAuthModalOpen(true)}
+                        className="w-full py-4 bg-white text-nexus-900 rounded-2xl font-black text-lg hover:bg-gray-100 transition-all uppercase tracking-widest"
+                    >
+                        Proを試す
+                    </button>
+                </div>
+            </div>
+        </div>
+      </section>
+
       {/* FAQ Section (New Hybrid Element) */}
       <section className="py-40 bg-white">
         <div className="max-w-3xl mx-auto px-6">
@@ -212,7 +297,7 @@ export const LandingPage: React.FC = () => {
                     onClick={() => setIsAuthModalOpen(true)}
                     className="px-12 py-6 bg-white text-black rounded-2xl font-black text-xl hover:bg-nexus-100 transition-all hover:shadow-2xl hover:scale-105 active:scale-95"
                 >
-                    無料で体験する
+                    無料で始める
                 </button>
                 <div className="text-left text-nexus-500 text-sm font-bold uppercase tracking-widest leading-none">
                     NO CREDIT CARD<br/>REQUIRED.
