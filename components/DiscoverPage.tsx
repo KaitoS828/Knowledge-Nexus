@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { useAppStore } from '../store';
-import { TrendArticle } from '../types';
-import { fetchAllTrends, fetchQiitaTrends, getPopularTags } from '../services/rssService';
+import { useAppStore } from '@/store/app-store';
+import { TrendArticle } from '@/types';
+import { fetchAllTrends, getPopularTags } from '@/services/rssService';
 import { Compass, Loader2, BookmarkPlus, Sparkles, ExternalLink, Heart, Tag as TagIcon, Clock } from 'lucide-react';
 import { cleanExcerpt, QiitaLogo, ZennLogo } from '../utils/textUtils';
 
@@ -9,7 +9,8 @@ export const DiscoverPage: React.FC = () => {
   const [articles, setArticles] = useState<TrendArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  const { addArticle } = useAppStore();
+  const [savingIds, setSavingIds] = useState<Set<string>>(new Set());
+  const { addArticle, updateArticle } = useAppStore();
 
   // トレンド記事を取得
   useEffect(() => {
@@ -19,9 +20,7 @@ export const DiscoverPage: React.FC = () => {
   const loadTrends = async () => {
     setIsLoading(true);
     try {
-      const trends = selectedTag 
-        ? await fetchQiitaTrends(selectedTag)
-        : await fetchAllTrends();
+      const trends = await fetchAllTrends(selectedTag || undefined);
       setArticles(trends);
     } catch (error) {
       console.error('Failed to load trends:', error);
@@ -30,12 +29,18 @@ export const DiscoverPage: React.FC = () => {
     }
   };
 
-  // 保存（裏でAI解析開始）
+  // 保存（ブックマークとして保存）
   const handleSave = async (article: TrendArticle) => {
+    if (savingIds.has(article.id)) return;
+    
+    const nextSaving = new Set(savingIds);
+    nextSaving.add(article.id);
+    setSavingIds(nextSaving);
+
     try {
       const newArticleId = crypto.randomUUID();
       
-      // 未解析で保存
+      // シンプルに保存（解析はしない）
       await addArticle({
         id: newArticleId,
         url: article.url,
@@ -43,7 +48,7 @@ export const DiscoverPage: React.FC = () => {
         summary: cleanExcerpt(article.excerpt || ''),
         content: '',
         practiceGuide: '',
-        status: 'pending',
+        status: 'new',
         frequentWords: [],
         tags: article.tags,
         addedAt: new Date().toISOString(),
@@ -51,10 +56,14 @@ export const DiscoverPage: React.FC = () => {
         analysisProgress: 0,
       });
       
-      alert('記事を保存しました！記事タブで「AI解析を開始」ボタンから解析できます。');
+      alert('記事を保存しました！');
     } catch (error) {
       console.error('Failed to save article:', error);
       alert('記事の保存に失敗しました');
+    } finally {
+        const next = new Set(savingIds);
+        next.delete(article.id);
+        setSavingIds(next);
     }
   };
 
@@ -74,7 +83,7 @@ export const DiscoverPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-nexus-50 dark:bg-nexus-900 p-6">
+    <div className="h-full overflow-y-auto bg-nexus-50 dark:bg-nexus-900 p-6">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex items-center gap-3 mb-4">
@@ -197,10 +206,26 @@ export const DiscoverPage: React.FC = () => {
               <div className="p-4 pt-0">
                 <button
                   onClick={() => handleSave(article)}
-                  className="w-full px-4 py-3 bg-nexus-900 dark:bg-nexus-600 hover:bg-nexus-800 dark:hover:bg-nexus-500 text-white rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md"
+                  disabled={savingIds.has(article.id)}
+                  className={`
+                    w-full px-4 py-3 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md
+                    ${savingIds.has(article.id) 
+                        ? 'bg-nexus-200 text-nexus-500 cursor-not-allowed' 
+                        : 'bg-nexus-900 dark:bg-nexus-600 hover:bg-nexus-800 dark:hover:bg-nexus-500 text-white'
+                    }
+                  `}
                 >
-                  <BookmarkPlus size={18} />
-                  保存
+                  {savingIds.has(article.id) ? (
+                    <>
+                        <Loader2 size={18} className="animate-spin" />
+                        保存中...
+                    </>
+                  ) : (
+                    <>
+                        <BookmarkPlus size={18} />
+                        保存
+                    </>
+                  )}
                 </button>
               </div>
 

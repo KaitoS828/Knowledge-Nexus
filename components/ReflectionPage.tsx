@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useAppStore } from '../store';
-import { sendChatMessage, getLearningRecommendations } from '../services/geminiService';
+import { useAppStore } from '@/store/app-store';
+import { sendChatMessage, getLearningRecommendations } from '@/services/geminiService';
 import { Send, Loader2, Sparkles, User, Database, Lightbulb, ArrowRight, BookOpen, X, RefreshCcw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 

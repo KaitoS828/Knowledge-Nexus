@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 import { Zap, Share2, ArrowRight, Layout, TrendingUp, User, Github, Mail, Shield, CheckCircle2, ChevronRight, Search, GraduationCap } from 'lucide-react';
 import { AuthModal } from './AuthModal';
 

@@ -1,8 +1,10 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { useAppStore } from '../store';
-import { Article } from '../types';
+import { useAppStore } from '@/store/app-store';
+import { Article } from '@/types';
 import { Sparkles, BookOpen, ArrowRight, Clock } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 
 interface RelatedArticlesSidebarProps {
   currentText: string;
@@ -10,7 +12,7 @@ interface RelatedArticlesSidebarProps {
 
 export const RelatedArticlesSidebar: React.FC<RelatedArticlesSidebarProps> = ({ currentText }) => {
   const { articles } = useAppStore();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [relatedArticles, setRelatedArticles] = useState<Article[]>([]);
 
   useEffect(() => {
@@ -111,7 +113,7 @@ export const RelatedArticlesSidebar: React.FC<RelatedArticlesSidebarProps> = ({ 
         {relatedArticles.map(article => (
           <div
             key={article.id}
-            onClick={() => navigate(`/article/${article.id}`)}
+            onClick={() => router.push(`/article/${article.id}`)}
             className="bg-white hover:bg-purple-50 border border-nexus-200 hover:border-purple-300 rounded-xl p-4 cursor-pointer transition-all group"
           >
             <div className="flex items-start gap-2 mb-2">

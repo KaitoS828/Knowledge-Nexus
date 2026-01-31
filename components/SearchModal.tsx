@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Search, Loader2, ExternalLink, Plus } from 'lucide-react';
-import { searchArticlesByKeyword, SearchResult } from '../services/geminiService';
+import { searchArticlesByKeyword, SearchResult } from '@/services/geminiService';
 
 interface SearchModalProps {
   onClose: () => void;

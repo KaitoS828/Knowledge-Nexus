@@ -1,9 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { Article, FrequentWord, GraphData, PersonalBrain, QuizQuestion, LearningTweet } from "../types";
 
-// Safe environment variable access for Vite
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.GEMINI_API_KEY || '';
-const FIRECRAWL_API_KEY = import.meta.env.VITE_FIRECRAWL_API_KEY || '';
+// Environment variable access for Next.js
+const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
+const FIRECRAWL_API_KEY = process.env.NEXT_PUBLIC_FIRECRAWL_API_KEY || '';
 
 // Initialize Gemini
 const ai = new GoogleGenAI({ apiKey: apiKey || '' });

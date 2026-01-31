@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import { useAppStore } from '../store';
-import { generateKnowledgeGraph } from '../services/geminiService';
-import { GraphData } from '../types';
+import { useAppStore } from '@/store/app-store';
+import { generateKnowledgeGraph } from '@/services/geminiService';
+import { GraphData } from '@/types';
 
 export const KnowledgeGraph: React.FC = () => {
   const { brain } = useAppStore();

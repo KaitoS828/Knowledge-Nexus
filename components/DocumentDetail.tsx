@@ -1,14 +1,17 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { DocumentStoredUpload, QuizQuestion } from '../types';
+import { useParams, useRouter } from 'next/navigation';
+import { DocumentStoredUpload, QuizQuestion } from '@/types';
 import { ArrowLeft, FileText, ChevronDown, ChevronUp, BookOpen, Lightbulb, Brain, Sparkles, Target, Loader2, CheckCircle, XCircle, Trophy, GripVertical, Hash, ArrowRight, Check, X, AlertCircle, RefreshCcw } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
-import { useAppStore } from '../store';
-import { generateQuiz } from '../services/geminiService';
+import { useAppStore } from '@/store/app-store';
+import { generateQuiz } from '@/services/geminiService';
 
 export const DocumentDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+  const router = useRouter();
   const { documents, brain, updateBrain } = useAppStore();
 
   const document = documents.find(d => d.id === id);
@@ -17,7 +20,7 @@ export const DocumentDetail: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <p className="text-nexus-500 mb-4">ドキュメントが見つかりません</p>
-        <button onClick={() => navigate(-1)} className="text-nexus-600 hover:text-nexus-900 underline">
+        <button onClick={() => router.back()} className="text-nexus-600 hover:text-nexus-900 underline">
           戻る
         </button>
       </div>
@@ -72,18 +75,18 @@ export const DocumentDetail: React.FC = () => {
     };
 
     if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
+      window.document.addEventListener('mousemove', handleMouseMove);
+      window.document.addEventListener('mouseup', handleMouseUp);
+      window.document.body.style.cursor = 'col-resize';
+      window.document.body.style.userSelect = 'none';
     } else {
-      document.body.style.cursor = 'default';
-      document.body.style.userSelect = 'auto';
+      window.document.body.style.cursor = 'default';
+      window.document.body.style.userSelect = 'auto';
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
+      window.document.removeEventListener('mousemove', handleMouseMove);
+      window.document.removeEventListener('mouseup', handleMouseUp);
     };
   }, [isResizing]);
 
@@ -92,7 +95,7 @@ export const DocumentDetail: React.FC = () => {
     setIsGeneratingActions(true);
     try {
       const { GoogleGenAI } = await import('@google/genai');
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
       const ai = new GoogleGenAI({ apiKey });
 
       const prompt = `
@@ -111,7 +114,7 @@ Markdown形式で出力してください。
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.0-flash',
         contents: prompt
       });
 
@@ -129,7 +132,7 @@ Markdown形式で出力してください。
     setIsGeneratingProposal(true);
     try {
       const { GoogleGenAI } = await import('@google/genai');
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+      const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
       const ai = new GoogleGenAI({ apiKey });
 
       const prompt = `
@@ -150,7 +153,7 @@ Markdown形式で出力してください。
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-2.0-flash',
         contents: prompt
       });
 
@@ -230,34 +233,34 @@ Markdown形式で出力してください。
 
   // Markdown Components
   const MarkdownComponents = {
-    code(props: any) {
-      const { children, className, node, ...rest } = props;
+    code(props: React.ComponentPropsWithoutRef<'code'> & { className?: string }) {
+      const { children, className, ...rest } = props;
       return (
         <code {...rest} className={`${className} bg-purple-200 px-1.5 py-0.5 rounded text-purple-800 font-mono text-sm font-bold border border-purple-300`}>
           {children}
         </code>
       );
     },
-    pre(props: any) {
+    pre(props: React.ComponentPropsWithoutRef<'pre'>) {
       return (
         <div className="relative group">
           <pre {...props} className="bg-[#1e1e1e] text-[#d4d4d4] p-5 rounded-xl overflow-x-auto my-6 text-sm leading-relaxed border border-purple-700 shadow-lg font-mono" />
         </div>
       );
     },
-    strong(props: any) {
+    strong(props: React.ComponentPropsWithoutRef<'strong'>) {
       return (
         <span className="bg-purple-200/60 px-0.5 rounded text-purple-900 font-semibold box-decoration-clone shadow-[0_1px_0_rgba(0,0,0,0.1)]">
           {props.children}
         </span>
       );
     },
-    p(props: any) {
+    p(props: React.ComponentPropsWithoutRef<'p'>) {
       return <p {...props} className="mb-6 leading-loose text-purple-800 text-[16px]" />;
     },
-    h1: ({ node, ...props }: any) => <h1 className="text-3xl font-bold mt-12 mb-6 text-purple-900 border-b pb-4" {...props} />,
-    h2: ({ node, ...props }: any) => <h2 className="text-2xl font-bold mt-10 mb-5 text-purple-900" {...props} />,
-    h3: ({ node, ...props }: any) => <h3 className="text-xl font-bold mt-8 mb-4 text-purple-800" {...props} />,
+    h1: (props: React.ComponentPropsWithoutRef<'h1'>) => <h1 className="text-3xl font-bold mt-12 mb-6 text-purple-900 border-b pb-4" {...props} />,
+    h2: (props: React.ComponentPropsWithoutRef<'h2'>) => <h2 className="text-2xl font-bold mt-10 mb-5 text-purple-900" {...props} />,
+    h3: (props: React.ComponentPropsWithoutRef<'h3'>) => <h3 className="text-xl font-bold mt-8 mb-4 text-purple-800" {...props} />,
   };
 
   // Helper to render current question
@@ -309,7 +312,7 @@ Markdown形式で出力してください。
       {/* Header */}
       <div className="h-14 flex items-center px-6 border-b border-purple-200 gap-4 bg-white/80 backdrop-blur z-10 justify-between shrink-0">
         <div className="flex items-center gap-4 flex-1 min-w-0">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-purple-100 rounded-lg text-purple-500 transition-colors">
+          <button onClick={() => router.back()} className="p-2 hover:bg-purple-100 rounded-lg text-purple-500 transition-colors">
             <ArrowLeft size={20} />
           </button>
           <div className="flex items-center gap-2">

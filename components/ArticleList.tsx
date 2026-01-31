@@ -1,12 +1,14 @@
+'use client';
+
 // Import useEffect from React
 import React, { useState, useRef, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useAppStore } from '../store';
-import { Article } from '../types';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useAppStore } from '@/store/app-store';
+import { Article } from '@/types';
 import { Plus, Search, BookOpen, CheckCircle, Clock, Flame, Trophy, Hash, Loader2, Trash2, Compass, ArrowRight, Sparkles, Upload, Link, FileText, Book, Crown } from 'lucide-react';
-import { fetchArticleContent, analyzeArticleContent, getLearningRecommendations, sendChatMessage } from '../services/geminiService';
-import { processDocument } from '../services/pdfService';
+import { fetchArticleContent, analyzeArticleContent, getLearningRecommendations, sendChatMessage } from '@/services/geminiService';
+import { processDocument } from '@/services/pdfService';
 import { RightSidebar } from './RightSidebar';
 import { UpgradeModal } from './UpgradeModal';
 import { SearchModal } from './SearchModal';
@@ -49,14 +51,13 @@ const ActivityHeatmap = () => {
 };
 
 export const ArticleList: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { articles, addArticle, deleteArticle, updateArticle, brain, documents, addDocument, deleteDocument, subscription, preferences, updateSubscriptionStatus } = useAppStore();
   
   // Check for Stripe session_id on mount
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const sessionId = searchParams.get('session_id');
+    const sessionId = searchParams?.get('session_id');
     
     if (sessionId) {
       updateSubscriptionStatus(sessionId).then(() => {
@@ -65,7 +66,7 @@ export const ArticleList: React.FC = () => {
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.search]); // location.searchのみを監視
+  }, [searchParams]); // searchParamsのみを監視
 
   const [urlInput, setUrlInput] = useState('');
   const [isFetching, setIsFetching] = useState(false);
@@ -159,7 +160,7 @@ export const ArticleList: React.FC = () => {
         setProgressMessage('');
       });
 
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Process URL error:', err);
       setProgressMessage('エラーが発生しました');
       setTimeout(() => {
@@ -167,7 +168,7 @@ export const ArticleList: React.FC = () => {
         setProgressMessage('');
       }, 2000);
       
-      if (err.message === 'Storage limit reached') {
+      if (err instanceof Error && err.message === 'Storage limit reached') {
         setShowUpgradeModal(true);
       } else {
         alert("記事の取得に失敗しました");
@@ -229,7 +230,7 @@ export const ArticleList: React.FC = () => {
         setProgress(0);
         setProgressMessage('');
       }, 1000);
-    } catch (e: any) {
+    } catch (e: unknown) {
       console.error(e);
       setProgressMessage('エラーが発生しました');
       setTimeout(() => {
@@ -237,7 +238,7 @@ export const ArticleList: React.FC = () => {
         setProgressMessage('');
       }, 2000);
       
-      if (e.message === 'Storage limit reached') {
+      if (e instanceof Error && e.message === 'Storage limit reached') {
         setShowUpgradeModal(true);
       } else {
         alert('アップロードまたは分析に失敗しました。Gemini API Key設定を確認してください');
@@ -308,7 +309,7 @@ export const ArticleList: React.FC = () => {
                 
                 {!isPro && (
                   <button 
-                    onClick={() => navigate('/pricing')}
+                    onClick={() => router.push('/pricing')}
                     className="flex items-center gap-2 px-4 py-2 bg-nexus-900 text-white rounded-xl font-bold text-sm hover:shadow-lg transition-all"
                   >
                     <Crown size={16} />
@@ -501,7 +502,7 @@ export const ArticleList: React.FC = () => {
             {['all', 'new', 'reading', 'practice'].map((f) => (
                 <button
                 key={f}
-                onClick={() => setFilter(f as any)}
+                onClick={() => setFilter(f as 'all' | 'new' | 'reading' | 'practice')}
                 className={`px-4 py-2 rounded-full text-sm font-bold transition-all ${
                     filter === f 
                     ? 'bg-nexus-900 text-white shadow-md' 
@@ -533,7 +534,7 @@ export const ArticleList: React.FC = () => {
                     .map(article => (
                       <div
                         key={article.id}
-                        onClick={() => navigate(`/article/${article.id}`)}
+                        onClick={() => router.push(`/article/${article.id}`)}
                         className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-2xl p-5 cursor-pointer transition-all hover:shadow-xl hover:-translate-y-1 group"
                       >
                         <div className="flex justify-between items-start mb-3">
@@ -587,7 +588,7 @@ export const ArticleList: React.FC = () => {
             {documents.map((doc) => (
                 <div
                 key={doc.id}
-                onClick={() => navigate(`/document/${doc.id}`)}
+                onClick={() => router.push(`/document/${doc.id}`)}
                 className="bg-gradient-to-br from-purple-50 to-indigo-50 hover:from-purple-100 hover:to-indigo-100 border-2 border-purple-200 hover:border-purple-300 rounded-2xl p-6 cursor-pointer transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1 flex flex-col h-full relative overflow-hidden"
                 >
                   <div className="flex justify-between items-start mb-4">
@@ -644,7 +645,7 @@ export const ArticleList: React.FC = () => {
             {filteredArticles.map((article) => (
                 <div
                 key={article.id}
-                onClick={() => navigate(`/article/${article.id}`)}
+                onClick={() => router.push(`/article/${article.id}`)}
                 className={`bg-white hover:bg-nexus-50 border border-nexus-200 hover:border-nexus-300 rounded-2xl p-6 cursor-pointer transition-all group shadow-sm hover:shadow-xl hover:-translate-y-1 flex flex-col h-full relative overflow-hidden ${
                     article.status === 'mastered' ? 'opacity-50 hover:opacity-100 grayscale-[0.5] hover:grayscale-0' : ''
                 }`}

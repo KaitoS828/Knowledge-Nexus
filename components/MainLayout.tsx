@@ -1,28 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { useAppStore } from '../store';
+'use client';
+
+import React, { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useAppStore } from '@/store/app-store';
 import { LandingPage } from './LandingPage';
 import { Onboarding } from './Onboarding';
 import { Loader2 } from 'lucide-react';
 import { ThemeManager } from './ThemeManager';
 
-export const MainLayout: React.FC = () => {
+interface MainLayoutProps {
+    children: React.ReactNode;
+}
+
+export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const { user, isOnboarded, isLoading } = useAppStore();
-    const navigate = useNavigate();
-    const location = useLocation();
+    const router = useRouter();
+    const pathname = usePathname();
 
     // 認証状態に応じたリダイレクト制御
     useEffect(() => {
         if (isLoading) return;
 
-        if (user && isOnboarded && location.pathname === '/') {
+        if (user && isOnboarded && pathname === '/') {
             // ログイン済み -> ダッシュボードへ
-            navigate('/dashboard', { replace: true });
-        } else if (!user && location.pathname !== '/') {
+            router.replace('/dashboard');
+        } else if (!user && pathname !== '/') {
             // 未ログイン -> ランディングページへ強制リダイレクト
-            navigate('/', { replace: true });
+            router.replace('/');
         }
-    }, [user, isOnboarded, isLoading, location.pathname, navigate]);
+    }, [user, isOnboarded, isLoading, pathname, router]);
 
     if (isLoading) {
         return (
@@ -49,7 +55,7 @@ export const MainLayout: React.FC = () => {
             <div className="flex h-screen w-screen overflow-hidden bg-nexus-50 dark:bg-nexus-900">
                 {/* Main Content - Full Screen (No Sidebar) */}
                 <main className="flex-1 h-full relative overflow-y-auto w-full">
-                    <Outlet />
+                    {children}
                 </main>
             </div>
         </>

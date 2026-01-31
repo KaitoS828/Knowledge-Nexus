@@ -1,13 +1,15 @@
+'use client';
+
 import React, { useState } from 'react';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 import { User, Shield, Brain, Laptop, Download, Trash2, Loader2, Sparkles, Type, Globe, CheckCircle2, Crown, LogOut, ArrowRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 
 export const Settings: React.FC = () => {
     const { user, preferences, updatePreferences, deleteAccount, brain, articles, subscription, signOut, showConfirm, showAlert } = useAppStore();
     const [isExporting, setIsExporting] = useState(false);
     const [isLoggingOut, setIsLoggingOut] = useState(false);
-    const navigate = useNavigate();
+    const router = useRouter();
 
     const handlePersonaChange = (persona: string) => {
         updatePreferences({ aiPersona: persona });
@@ -26,7 +28,7 @@ export const Settings: React.FC = () => {
         if (confirmed) {
             setIsLoggingOut(true);
             await signOut();
-            navigate('/');
+            router.push('/');
         }
     };
 
@@ -120,7 +122,7 @@ export const Settings: React.FC = () => {
                                         無制限の記事保存、AI分析、PDFアップロードをご利用いただけます。
                                     </p>
                                     <button
-                                        onClick={() => navigate('/pricing')}
+                                        onClick={() => router.push('/pricing')}
                                         className="text-xs text-orange-600 hover:text-orange-900 font-bold underline"
                                     >
                                         プラン管理 →
@@ -136,7 +138,7 @@ export const Settings: React.FC = () => {
                                         無制限の記事保存、高度なAI分析、PDFアップロードなどの機能をアンロック
                                     </p>
                                     <button
-                                        onClick={() => navigate('/pricing')}
+                                        onClick={() => router.push('/pricing')}
                                         className="w-full py-3 bg-white text-nexus-900 rounded-xl font-bold hover:bg-yellow-50 transition-all flex items-center justify-center gap-2 group"
                                     >
                                         <Sparkles size={16} className="text-yellow-500" />

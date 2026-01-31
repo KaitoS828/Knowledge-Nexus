@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, BookOpen, Code, Sparkles, Check } from 'lucide-react';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 import { convertToArticles } from '../data/onboardingData';
 
 interface OnboardingModalProps {

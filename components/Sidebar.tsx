@@ -1,6 +1,8 @@
+'use client';
+
 import React, { useState } from 'react';
-import { useAppStore } from '../store';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useAppStore } from '@/store/app-store';
+import { useRouter, usePathname } from 'next/navigation';
 import { Layout, BookOpen, Brain, Activity, Settings, PenTool, LogOut, CreditCard, User, X, MessageCircle } from 'lucide-react';
 import { SettingsModal } from './SettingsModal';
 
@@ -10,8 +12,8 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   const { signOut, user } = useAppStore();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const router = useRouter();
+  const pathname = usePathname();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const navItems = [
@@ -24,7 +26,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   ];
 
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string) => pathname === path;
 
   return (
     <div className="w-64 h-screen bg-white dark:bg-nexus-800 border-r border-nexus-200 dark:border-nexus-700 flex flex-col flex-shrink-0 sticky top-0 z-20 transition-all shadow-xl lg:shadow-none">
@@ -49,7 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             <button
               key={item.id}
               onClick={() => {
-                  navigate(item.path);
+                  router.push(item.path);
                   if (onClose) onClose();
               }}
               className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group ${

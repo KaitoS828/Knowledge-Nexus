@@ -1,5 +1,7 @@
+'use client';
+
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { X, Sparkles, ArrowRight, Zap, CheckCircle, Database } from 'lucide-react';
 
 interface UpgradeModalProps {
@@ -9,7 +11,7 @@ interface UpgradeModalProps {
 }
 
 export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, message }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   if (!isOpen) return null;
 
@@ -77,7 +79,7 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose, mes
           <button
             onClick={() => {
               onClose();
-              navigate('/pricing');
+              router.push('/pricing');
             }}
             className="w-full bg-gradient-to-r from-nexus-900 to-black text-white font-bold text-lg py-4 rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2 group"
           >

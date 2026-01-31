@@ -1,7 +1,7 @@
 import { GoogleGenAI } from "@google/genai";
 
 const getApiKey = () => {
-    return import.meta.env.VITE_GEMINI_API_KEY || '';
+    return process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 };
 
 export interface ExtractedDocument {

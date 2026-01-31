@@ -1,17 +1,22 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { useAppStore } from '../store';
-import { Book, PenTool, MessageCircle, Brain, Activity, Plus, Search, User, Crown, Settings as SettingsIcon } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { useAppStore } from '@/store/app-store';
+import { Book, PenTool, MessageCircle, Brain, Activity, Plus, Search, User, Crown, Settings as SettingsIcon, Sparkles } from 'lucide-react';
 import { ArticleList } from './ArticleList';
 import { LearningDiary } from './LearningDiary';
 import { ReflectionPage } from './ReflectionPage';
 import { BrainEditor } from './BrainEditor';
 import { KnowledgeGraph } from './KnowledgeGraph';
 import { SearchModal } from './SearchModal'; 
+import { RAGSearchModal } from './RAGSearchModal';
 import { DiscoverPage } from './DiscoverPage';
 import { TrendingSidebar } from './TrendingSidebar';
 import { OnboardingModal } from './OnboardingModal';
-import { fetchArticleContent } from '../services/geminiService';
+import { fetchArticleContent } from '@/services/geminiService';
+import { SpartanCoach } from './SpartanCoach';
+import { DraftGeneratorModal } from './DraftGeneratorModal';
 
 type TabId = 'discover' | 'articles' | 'diary' | 'reflection' | 'brain' | 'graph';
 
@@ -31,27 +36,30 @@ const TABS: Tab[] = [
 ];
 
 export const UnifiedDashboard: React.FC = () => {
-  const { tab } = useParams<{ tab?: TabId }>();
-  const [activeTab, setActiveTab] = useState<TabId>(tab || 'discover');
+  const params = useParams();
+  const tabParam = params?.tab as TabId | undefined;
+  const [activeTab, setActiveTab] = useState<TabId>(tabParam || 'discover');
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isRAGModalOpen, setIsRAGModalOpen] = useState(false);
+  const [isDraftModalOpen, setIsDraftModalOpen] = useState(false);
   const { user, subscription, addArticle, isOnboarded } = useAppStore();
-  const navigate = useNavigate();
+  const router = useRouter();
   const isPro = subscription?.planType === 'pro';
 
   // URL同期: URLが変わったらタブを同期
   useEffect(() => {
-    if (tab && tab !== activeTab) {
-      setActiveTab(tab);
-    } else if (!tab) {
+    if (tabParam && tabParam !== activeTab) {
+      setActiveTab(tabParam);
+    } else if (!tabParam) {
       // /dashboard のみの場合は discover にリダイレクト（デフォルト）
-      navigate('/dashboard/discover', { replace: true });
+      router.replace('/dashboard/discover');
     }
-  }, [tab]);
+  }, [tabParam]);
 
   // タブ切り替え時にURLを変更
   const handleTabChange = (tabId: TabId) => {
     setActiveTab(tabId);
-    navigate(`/dashboard/${tabId}`);
+    router.push(`/dashboard/${tabId}`);
   };
 
   // Keyboard shortcut: / key to open search
@@ -61,6 +69,11 @@ export const UnifiedDashboard: React.FC = () => {
       if (e.key === '/' && !e.ctrlKey && !e.metaKey && !(e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)) {
         e.preventDefault();
         setIsSearchModalOpen(true);
+      }
+      // Cmd+K or Ctrl+K for RAG Search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsRAGModalOpen(true);
       }
     };
 
@@ -128,8 +141,8 @@ export const UnifiedDashboard: React.FC = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="flex-1 max-w-xl mx-8">
-            <div className="relative cursor-pointer" onClick={() => setIsSearchModalOpen(true)}>
+          <div className="flex-1 max-w-xl mx-8 flex items-center gap-2">
+            <div className="relative cursor-pointer flex-1" onClick={() => setIsSearchModalOpen(true)}>
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-nexus-400 dark:text-nexus-500" size={18} />
               <input
                 type="text"
@@ -138,6 +151,20 @@ export const UnifiedDashboard: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2 bg-nexus-50 dark:bg-nexus-900 border border-nexus-200 dark:border-nexus-700 rounded-lg text-sm cursor-pointer hover:border-nexus-300 dark:hover:border-nexus-600 transition-colors dark:text-nexus-100"
               />
             </div>
+            <button
+                onClick={() => setIsRAGModalOpen(true)}
+                className="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all"
+                title="AIナレッジ検索 (Cmd+K)"
+            >
+                <Sparkles size={20} />
+            </button>
+            <button
+                onClick={() => setIsDraftModalOpen(true)}
+                className="p-2 bg-gradient-to-br from-green-500 to-teal-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all ml-2"
+                title="記事執筆スタジオ"
+            >
+                <PenTool size={20} />
+            </button>
           </div>
 
           {/* User Profile */}
@@ -145,7 +172,7 @@ export const UnifiedDashboard: React.FC = () => {
             {/* Upgrade Button (if Free) */}
             {!isPro && (
               <button
-                onClick={() => navigate('/pricing')}
+                onClick={() => router.push('/pricing')}
                 className="px-4 py-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white rounded-lg text-sm font-bold hover:shadow-lg transition-all flex items-center gap-2"
               >
                 <Crown size={16} />
@@ -155,7 +182,7 @@ export const UnifiedDashboard: React.FC = () => {
 
             {/* Settings */}
             <button
-              onClick={() => navigate('/settings')}
+              onClick={() => router.push('/settings')}
               className="p-2 hover:bg-nexus-100 dark:hover:bg-nexus-700 rounded-lg transition-colors"
             >
               <SettingsIcon size={20} className="text-nexus-600 dark:text-nexus-400" />
@@ -227,11 +254,27 @@ export const UnifiedDashboard: React.FC = () => {
         />
       )}
 
+      {/* RAG Search Modal */}
+      <RAGSearchModal
+        isOpen={isRAGModalOpen}
+        onClose={() => setIsRAGModalOpen(false)}
+      />
+
       {/* Onboarding Modal */}
       <OnboardingModal 
         isOpen={!isOnboarded}
         onClose={() => {}}
       />
+      
+      {/* Draft Generator Modal */}
+      {isDraftModalOpen && (
+        <DraftGeneratorModal
+          onClose={() => setIsDraftModalOpen(false)}
+        />
+      )}
+
+      {/* Spartan Coach (Always watching you) */}
+      <SpartanCoach />
     </div>
   );
 };

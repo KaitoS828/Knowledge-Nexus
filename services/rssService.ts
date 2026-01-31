@@ -7,6 +7,12 @@ const CACHE_DURATION = 10 * 60 * 1000; // 10分
 /**
  * ZennのRSSフィードを取得
  */
+// CORS Proxy to bypass browser restrictions
+const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+
+/**
+ * ZennのRSSフィードを取得
+ */
 export const fetchZennTrends = async (tag?: string): Promise<TrendArticle[]> => {
   const cacheKey = `zenn_${tag || 'all'}`;
   const cached = cache.get(cacheKey);
@@ -17,11 +23,12 @@ export const fetchZennTrends = async (tag?: string): Promise<TrendArticle[]> => 
 
   try {
     // ZennのトレンドRSSフィード
-    const url = tag 
+    const targetUrl = tag 
       ? `https://zenn.dev/topics/${tag}/feed`
       : 'https://zenn.dev/feed';
     
-    const response = await fetch(url);
+    // Use Proxy
+    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(targetUrl)}`);
     if (!response.ok) throw new Error('Zenn RSS failed');
     
     const text = await response.text();
@@ -52,7 +59,7 @@ export const fetchZennTrends = async (tag?: string): Promise<TrendArticle[]> => 
     cache.set(cacheKey, { data: trendArticles, timestamp: Date.now() });
     return trendArticles;
   } catch (error) {
-    console.error('Failed to fetch Zenn trends:', error);
+    console.warn('Failed to fetch Zenn trends (likely CORS or Net error), trying fallback...', error);
     return [];
   }
 };
@@ -60,8 +67,9 @@ export const fetchZennTrends = async (tag?: string): Promise<TrendArticle[]> => 
 /**
  * noteのRSSフィードを取得
  */
-export const fetchNoteTrends = async (): Promise<TrendArticle[]> => {
-  const cacheKey = 'note_all';
+export const fetchNoteTrends = async (tag?: string): Promise<TrendArticle[]> => {
+  const queryTag = tag || 'tech';
+  const cacheKey = `note_${queryTag}`;
   const cached = cache.get(cacheKey);
   
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
@@ -69,8 +77,11 @@ export const fetchNoteTrends = async (): Promise<TrendArticle[]> => {
   }
 
   try {
-    // noteの人気記事RSS（テクノロジー系）
-    const response = await fetch('https://note.com/api/v2/hashtags/tech/notes?order=trend');
+    // noteの人気記事API
+    const targetUrl = `https://note.com/api/v2/hashtags/${queryTag}/notes?order=trend`;
+    // Use Proxy
+    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(targetUrl)}`);
+
     if (!response.ok) throw new Error('note API failed');
     
     const data = await response.json();
@@ -80,7 +91,7 @@ export const fetchNoteTrends = async (): Promise<TrendArticle[]> => {
       url: `https://note.com/n/${item.key}`,
       author: item.user?.nickname || 'Unknown',
       publishedAt: item.publishAt || new Date().toISOString(),
-      tags: ['tech'],
+      tags: [queryTag],
       likes: item.likeCount || 0,
       source: 'note' as const,
       excerpt: item.body?.substring(0, 150) || ''
@@ -97,8 +108,8 @@ export const fetchNoteTrends = async (): Promise<TrendArticle[]> => {
 /**
  * はてなブログのRSSフィードを取得
  */
-export const fetchHatenaTrends = async (): Promise<TrendArticle[]> => {
-  const cacheKey = 'hatena_all';
+export const fetchHatenaTrends = async (tag?: string): Promise<TrendArticle[]> => {
+  const cacheKey = `hatena_${tag || 'all'}`;
   const cached = cache.get(cacheKey);
   
   if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
@@ -106,8 +117,13 @@ export const fetchHatenaTrends = async (): Promise<TrendArticle[]> => {
   }
 
   try {
-    // はてなブログのホットエントリー（テクノロジー）
-    const response = await fetch('https://b.hatena.ne.jp/hotentry/it.rss');
+    // はてなブログのホットエントリー（テクノロジー）またはタグ検索
+    const targetUrl = tag 
+      ? `https://b.hatena.ne.jp/search/tag?q=${encodeURIComponent(tag)}&mode=rss`
+      : 'https://b.hatena.ne.jp/hotentry/it.rss';
+
+    // Use Proxy
+    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(targetUrl)}`);
     if (!response.ok) throw new Error('Hatena RSS failed');
     
     const text = await response.text();
@@ -128,8 +144,8 @@ export const fetchHatenaTrends = async (): Promise<TrendArticle[]> => {
         url: link,
         author: 'はてな',
         publishedAt: new Date(pubDate).toISOString(),
-        tags: ['it'],
-        likes: parseInt(bookmarkCount),
+        tags: tag ? [tag] : ['it'],
+        likes: parseInt(bookmarkCount) || 0,
         source: 'はてな' as const,
         excerpt: description.substring(0, 150)
       };
@@ -145,6 +161,8 @@ export const fetchHatenaTrends = async (): Promise<TrendArticle[]> => {
 
 /**
  * Qiitaのトレンド記事を取得
+ * Qiita often works without proxy, but can be strict.
+ * If user says it works, we leave it AS IS.
  */
 export const fetchQiitaTrends = async (tag?: string): Promise<TrendArticle[]> => {
   const cacheKey = `qiita_${tag || 'all'}`;
@@ -159,7 +177,7 @@ export const fetchQiitaTrends = async (tag?: string): Promise<TrendArticle[]> =>
     const params = new URLSearchParams({
       page: '1',
       per_page: '20',
-      query: tag ? `tag:${tag} stocks:>50` : 'stocks:>100'
+      query: tag ? `tag:${tag} stocks:>20` : 'stocks:>100' // タグ検索時は条件を少し緩める
     });
     
     const response = await fetch(`https://qiita.com/api/v2/items?${params}`);
@@ -196,15 +214,14 @@ export const fetchQiitaTrends = async (tag?: string): Promise<TrendArticle[]> =>
 export const fetchAllTrends = async (tag?: string): Promise<TrendArticle[]> => {
   try {
     // 並列で取得
-    const [zennArticles, qiitaArticles, noteArticles, hatenaArticles] = await Promise.all([
+    const [zennArticles, qiitaArticles, noteArticles] = await Promise.all([
       fetchZennTrends(tag),
       fetchQiitaTrends(tag),
-      fetchNoteTrends(),
-      fetchHatenaTrends()
+      fetchNoteTrends(tag)
     ]);
 
     // マージして日付でソート
-    const allArticles = [...zennArticles, ...qiitaArticles, ...noteArticles, ...hatenaArticles];
+    const allArticles = [...zennArticles, ...qiitaArticles, ...noteArticles];
     allArticles.sort((a, b) => 
       new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
     );

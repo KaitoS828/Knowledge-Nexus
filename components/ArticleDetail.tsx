@@ -1,9 +1,11 @@
+'use client';
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { useParams, useNavigate } from 'react-router-dom';
-import { Article, Message, QuizQuestion, FrequentWord } from '../types';
-import { useAppStore } from '../store';
-import { sendChatMessage, generateMergeProposal, generateQuiz, generateStepByStepGuide, getTeachingResponse } from '../services/geminiService';
+import { useParams, useRouter } from 'next/navigation';
+import { Article, Message, QuizQuestion, FrequentWord } from '@/types';
+import { useAppStore } from '@/store/app-store';
+import { sendChatMessage, generateMergeProposal, generateQuiz, generateStepByStepGuide, getTeachingResponse } from '@/services/geminiService';
 import { ArrowLeft, Send, Sparkles, Book, GitMerge, Check, CheckCircle, X, ClipboardList, AlertCircle, Tag, Info, Volume2, StopCircle, Hash, Lightbulb, Code, Rocket, Database, Layers, Target, Zap, ChevronDown, ChevronUp, Loader2, PenTool, RefreshCcw, ArrowRight, Highlighter, GripVertical, Timer, Maximize2, Minimize2, ExternalLink, GraduationCap, User, MessageCircle } from 'lucide-react';
 
 interface SkillPattern {
@@ -14,8 +16,9 @@ interface SkillPattern {
 }
 
 export const ArticleDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+  const router = useRouter();
   const { articles, brain, updateBrain, updateArticleStatus, updateArticle, logActivity, preferences } = useAppStore();
 
   const article = articles.find(a => a.id === id);
@@ -24,7 +27,7 @@ export const ArticleDetail: React.FC = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <p className="text-nexus-500 mb-4">記事が見つかりません</p>
-        <button onClick={() => navigate(-1)} className="text-nexus-600 hover:text-nexus-900 underline">
+        <button onClick={() => router.back()} className="text-nexus-600 hover:text-nexus-900 underline">
           戻る
         </button>
       </div>
@@ -491,7 +494,7 @@ export const ArticleDetail: React.FC = () => {
       {/* Header */}
       <div className="h-14 flex items-center px-6 border-b border-nexus-200 gap-4 bg-white/80 backdrop-blur z-10 justify-between shrink-0">
           <div className="flex items-center gap-4 flex-1 min-w-0">
-            <button onClick={() => navigate(-1)} className="p-2 hover:bg-nexus-100 rounded-lg text-nexus-500 transition-colors">
+            <button onClick={() => router.back()} className="p-2 hover:bg-nexus-100 rounded-lg text-nexus-500 transition-colors">
                 <ArrowLeft size={20} />
             </button>
             <h2 className="font-bold truncate text-lg text-nexus-900">{article.title}</h2>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 import { 
     X, User, Moon, Sun, Monitor, Languages, 
     Trash2, Save, LogOut, Shield, Crown, Sparkles, Check

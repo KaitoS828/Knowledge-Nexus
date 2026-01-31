@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 import { Plus, Search, Loader2, ExternalLink, Sparkles, BookOpen, X } from 'lucide-react';
-import { discoverTechArticles } from '../services/geminiService';
+import { discoverTechArticles } from '@/services/geminiService';
 
 interface RightSidebarProps {
   onAnalyzeUrl: (url: string) => void;

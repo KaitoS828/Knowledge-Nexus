@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 import { Save, RefreshCw } from 'lucide-react';
 
 export const BrainEditor: React.FC = () => {

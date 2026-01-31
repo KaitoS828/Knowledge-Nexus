@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 import { PenTool, Search, Calendar, Sparkles, Send, Trash2, Loader2, MessageSquare, ArrowRight, Zap, X, Copy, Check, FileText } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
-import { draftDiaryFromTweets, generatePublicArticle } from '../services/geminiService';
-import { DiaryEntry } from '../types';
+import { draftDiaryFromTweets, generatePublicArticle } from '@/services/geminiService';
+import { DiaryEntry } from '@/types';
 import { RelatedArticlesSidebar } from './RelatedArticlesSidebar';
 
 export const LearningDiary: React.FC = () => {
@@ -77,7 +77,7 @@ export const LearningDiary: React.FC = () => {
     
     // AI Call (Simplified local logic to call Gemini directly here for this specific feature)
     try {
-        const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+        const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
         const ai = new GoogleGenAI({ apiKey });
 
         const logs = diaryEntries.slice(0, 10).map(e => `- ${e.date}: ${e.content}`).join('\n');

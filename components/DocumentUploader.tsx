@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 import { useToast } from './ui/Toast';
-import { processDocument } from '../services/pdfService';
+import { processDocument } from '@/services/pdfService';
 import { Upload, FileText, Loader2, Trash2, File, CheckCircle, X, BookOpen } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { UpgradeModal } from './UpgradeModal';

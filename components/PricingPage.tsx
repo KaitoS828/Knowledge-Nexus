@@ -1,11 +1,13 @@
+'use client';
+
 import React, { useState } from 'react';
 import { Check, Zap, Crown, Sparkles, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import { useAppStore } from '../store';
+import { useRouter } from 'next/navigation';
+import { useAppStore } from '@/store/app-store';
 
 export const PricingPage: React.FC = () => {
   const { subscription, user, upgradeToProMonthly, upgradeToProYearly, showAlert } = useAppStore();
-  const navigate = useNavigate();
+  const router = useRouter();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [isUpgrading, setIsUpgrading] = useState(false);
 
@@ -18,7 +20,7 @@ export const PricingPage: React.FC = () => {
     // ゲストユーザーのチェック
     if (user.isGuest) {
       await showAlert('Proプランにアップグレードするには、本登録（メールアドレス・パスワード登録）が必要です。\n\nサイドバーの「Settings」から本登録を完了してください。', 'error', 'ゲストユーザー');
-      navigate('/settings');
+      router.push('/settings');
       return;
     }
 
@@ -46,7 +48,7 @@ export const PricingPage: React.FC = () => {
       <div className="border-b border-nexus-200 bg-white/80 backdrop-blur">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center gap-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => router.back()}
             className="p-2 hover:bg-nexus-100 rounded-lg text-nexus-500 transition-colors"
           >
             <ArrowLeft size={20} />

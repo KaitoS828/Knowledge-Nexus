@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, ArrowRight, Loader2, AlertCircle, Check, Lock, UserPlus, LogIn, Github, X } from 'lucide-react';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 
 interface AuthModalProps {
   isOpen: boolean;

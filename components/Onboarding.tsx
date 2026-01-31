@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 import { Sparkles, ArrowRight, Loader2 } from 'lucide-react';
 
 export const Onboarding: React.FC = () => {

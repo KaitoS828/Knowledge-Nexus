@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAppStore } from '../store';
+import { useAppStore } from '@/store/app-store';
 
 export const ThemeManager: React.FC = () => {
     const { preferences } = useAppStore();
