@@ -5,8 +5,9 @@ import { Article, FrequentWord, GraphData, PersonalBrain, QuizQuestion, Learning
 const apiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY || '';
 const FIRECRAWL_API_KEY = process.env.NEXT_PUBLIC_FIRECRAWL_API_KEY || '';
 
-// Initialize Gemini
-const ai = new GoogleGenAI({ apiKey: apiKey || '' });
+// Initialize Gemini with a fallback key to prevent runtime crash on initialization if env is missing
+// The actual API call will fail gracefully instead of the entire app crashing
+const ai = new GoogleGenAI({ apiKey: apiKey || 'dummy-key-to-prevent-crash' });
 
 // Models
 const TEXT_MODEL = 'gemini-3-flash-preview';
@@ -242,14 +243,13 @@ export const fetchArticleContent = async (url: string): Promise<Partial<Article>
   // 3. Fallback: Mock
   if (!content) {
     content = "# (コンテンツの取得に失敗しました)\n\nURLを確認してください。または、サイトがスクレイピングをブロックしている可能性があります。";
-    title = "取得エラー";
   }
 
   return {
     url,
     title,
     content: cleanMarkdown(content), // Apply cleaning
-    summary: "AI解析中...",
+    summary: "AI解析中... (APIキーを確認してください)",
     practiceGuide: "解析中...",
     frequentWords: [],
     tags: [],

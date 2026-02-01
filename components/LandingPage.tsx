@@ -17,31 +17,31 @@ export const LandingPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] text-nexus-900 font-sans selection:bg-nexus-900 selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#FDFCFB] text-slate-900 font-sans selection:bg-black selection:text-white overflow-x-hidden">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-nexus-100">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/70 backdrop-blur-xl border-b border-slate-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
             <div className="flex items-center gap-3 group cursor-pointer">
-                <div className="w-10 h-10 bg-nexus-900 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-nexus-900/20 group-hover:scale-105 transition-transform duration-300">N</div>
+                <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-slate-900/20 group-hover:scale-105 transition-transform duration-300">N</div>
                 <span className="text-xl font-black tracking-tighter uppercase">Knowledge Nexus</span>
             </div>
             
             <div className="hidden md:flex items-center gap-10">
                 {['プロダクト', 'ソリューション', '料金', 'リソース'].map((item) => (
-                    <a key={item} href="#" className="text-sm font-bold text-nexus-500 hover:text-nexus-900 transition-colors uppercase tracking-widest">{item}</a>
+                    <a key={item} href="#" className="text-sm font-bold text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest">{item}</a>
                 ))}
             </div>
 
             <div className="flex items-center gap-4">
                 <button 
                     onClick={() => setIsAuthModalOpen(true)}
-                    className="hidden sm:block text-sm font-black text-nexus-500 hover:text-nexus-900 transition-colors uppercase tracking-widest"
+                    className="hidden sm:block text-sm font-black text-slate-500 hover:text-slate-900 transition-colors uppercase tracking-widest"
                 >
                     ログイン
                 </button>
                 <button 
                     onClick={() => setIsAuthModalOpen(true)}
-                    className="px-6 py-3 bg-nexus-900 text-white font-black text-sm rounded-xl transition-all hover:shadow-xl hover:-translate-y-0.5 uppercase tracking-widest"
+                    className="px-6 py-3 bg-black text-white font-black text-sm rounded-xl transition-all hover:shadow-xl hover:-translate-y-0.5 uppercase tracking-widest"
                 >
                     無料で始める
                 </button>
@@ -54,16 +54,16 @@ export const LandingPage: React.FC = () => {
          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1200px] h-[1200px] bg-gradient-to-br from-indigo-50/80 via-white to-purple-50/80 rounded-full blur-[120px] -z-10 opacity-70 pointer-events-none"></div>
          
          <div className="max-w-6xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/80 backdrop-blur-md rounded-full border border-nexus-100 shadow-xl shadow-indigo-500/5 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <div className="inline-flex items-center gap-2 px-5 py-2.5 bg-white/80 backdrop-blur-md rounded-full border border-slate-100 shadow-xl shadow-indigo-500/5 mb-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
                 <div className="w-2 h-2 bg-indigo-500 rounded-full animate-pulse"></div>
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600">AI-Powered Tech Knowledge Management</span>
             </div>
 
-            <h1 className="text-6xl md:text-[100px] font-black tracking-tighter text-nexus-900 mb-10 leading-[0.9] animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
-               最速の<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-nexus-900 via-indigo-800 to-nexus-700 underline decoration-indigo-500/30">エンジニア成長</span>を。
+            <h1 className="text-6xl md:text-[100px] font-black tracking-tighter text-slate-900 mb-10 leading-[0.9] animate-in fade-in slide-in-from-bottom-8 duration-1000 delay-100">
+               最速の<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-slate-900 via-indigo-800 to-slate-700 underline decoration-indigo-500/30">エンジニア成長</span>を。
             </h1>
 
-            <p className="text-xl md:text-2xl text-nexus-500 max-w-3xl mx-auto mb-16 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-200">
+            <p className="text-xl md:text-2xl text-slate-500 max-w-3xl mx-auto mb-16 font-medium leading-relaxed animate-in fade-in slide-in-from-bottom-10 duration-1000 delay-200">
                 AIが記事やPDFから瞬時にナレッジを抽出。<br/>
                 あなたの「第2の脳」が、昨日までの断片的な知識を、明日からの強力な武器へと変えます。
             </p>
@@ -71,7 +71,7 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
                 <button
                     onClick={() => setIsAuthModalOpen(true)}
-                    className="group relative px-12 py-6 bg-nexus-900 text-white rounded-[24px] font-black text-xl transition-all hover:shadow-2xl hover:scale-[1.03] active:scale-[0.98] w-full sm:w-auto overflow-hidden"
+                    className="group relative px-12 py-6 bg-black text-white rounded-[24px] font-black text-xl transition-all hover:shadow-2xl hover:scale-[1.03] active:scale-[0.98] w-full sm:w-auto overflow-hidden"
                 >
                     <div className="relative z-10 flex items-center gap-3">
                         無料で今すぐ始める
@@ -84,7 +84,7 @@ export const LandingPage: React.FC = () => {
                             <img src={`https://i.pravatar.cc/150?u=${i + 10}`} alt="user" />
                         </div>
                     ))}
-                    <div className="w-12 h-12 rounded-full border-4 border-white bg-nexus-100 flex items-center justify-center text-[10px] font-black text-nexus-900">+1.2k</div>
+                    <div className="w-12 h-12 rounded-full border-4 border-white bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-900">+1.2k</div>
                 </div>
             </div>
          </div>
@@ -96,34 +96,34 @@ export const LandingPage: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 <div className="p-10 bg-indigo-50 rounded-[40px] border border-indigo-100 space-y-4">
                     <p className="text-sm font-black text-indigo-500 uppercase tracking-widest">Efficiency</p>
-                    <h3 className="text-5xl font-black text-nexus-900">15% <span className="text-2xl text-nexus-400">Time Saved</span></h3>
-                    <p className="text-nexus-500 font-medium leading-relaxed">記事の構造化と要約により、毎日の情報収集に必要な時間を劇的に短縮します。</p>
+                    <h3 className="text-5xl font-black text-slate-900">15% <span className="text-2xl text-slate-400">Time Saved</span></h3>
+                    <p className="text-slate-500 font-medium leading-relaxed">記事の構造化と要約により、毎日の情報収集に必要な時間を劇的に短縮します。</p>
                 </div>
                 <div className="p-10 bg-purple-50 rounded-[40px] border border-purple-100 space-y-4">
                     <p className="text-sm font-black text-purple-500 uppercase tracking-widest">Retention</p>
-                    <h3 className="text-5xl font-black text-nexus-900">92% <span className="text-2xl text-nexus-400">Accuracy</span></h3>
-                    <p className="text-nexus-500 font-medium leading-relaxed">AIによる定着度クイズとフィードバックで、学んだ知識を確実に自分のものにします。</p>
+                    <h3 className="text-5xl font-black text-slate-900">92% <span className="text-2xl text-slate-400">Accuracy</span></h3>
+                    <p className="text-slate-500 font-medium leading-relaxed">AIによる定着度クイズとフィードバックで、学んだ知識を確実に自分のものにします。</p>
                 </div>
                 <div className="p-10 bg-yellow-50 rounded-[40px] border border-yellow-100 space-y-4">
                     <p className="text-sm font-black text-yellow-600 uppercase tracking-widest">Output</p>
-                    <h3 className="text-5xl font-black text-nexus-900">3x <span className="text-2xl text-nexus-400">Faster Draft</span></h3>
-                    <p className="text-nexus-500 font-medium leading-relaxed">蓄積したログからZenn/Qiita用ドラフトを生成し、アウトプットのハードルを最小化します。</p>
+                    <h3 className="text-5xl font-black text-slate-900">3x <span className="text-2xl text-slate-400">Faster Draft</span></h3>
+                    <p className="text-slate-500 font-medium leading-relaxed">蓄積したログからZenn/Qiita用ドラフトを生成し、アウトプットのハードルを最小化します。</p>
                 </div>
             </div>
         </div>
       </section>
 
       {/* Step-by-Step Learning Timeline (New Hybrid Element) */}
-      <section className="py-40 bg-nexus-50/30">
+      <section className="py-40 bg-slate-50/30">
         <div className="max-w-4xl mx-auto px-6">
             <div className="text-center mb-24">
-                <h2 className="text-4xl md:text-5xl font-black text-nexus-900 tracking-tight mb-6">Knowledge Nexusが選ばれる理由は？</h2>
-                <div className="w-24 h-2 bg-nexus-900 mx-auto rounded-full"></div>
+                <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-6">Knowledge Nexusが選ばれる理由は？</h2>
+                <div className="w-24 h-2 bg-black mx-auto rounded-full"></div>
             </div>
 
             <div className="relative">
                 {/* Vertical Line */}
-                <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-nexus-100 -translate-x-1/2 hidden md:block"></div>
+                <div className="absolute left-1/2 top-0 bottom-0 w-1 bg-slate-100 -translate-x-1/2 hidden md:block"></div>
 
                 <div className="space-y-32">
                     {[
@@ -154,17 +154,17 @@ export const LandingPage: React.FC = () => {
                     ].map((item, i) => (
                         <div key={item.step} className={`relative flex flex-col md:flex-row items-center gap-12 ${i % 2 === 1 ? 'md:flex-row-reverse' : ''}`}>
                             {/* Circle Indicator */}
-                            <div className="absolute left-1/2 -translate-x-1/2 w-12 h-12 bg-white border-4 border-nexus-900 rounded-full z-10 flex items-center justify-center font-black text-nexus-900 hidden md:flex">
+                            <div className="absolute left-1/2 -translate-x-1/2 w-12 h-12 bg-white border-4 border-slate-900 rounded-full z-10 flex items-center justify-center font-black text-slate-900 hidden md:flex">
                                 {item.step}
                             </div>
                             
                             <div className="flex-1 space-y-4 text-center md:text-left">
-                                <span className="md:hidden text-4xl font-black text-nexus-200">{item.step}</span>
-                                <h3 className="text-3xl font-black text-nexus-900 tracking-tight">{item.title}</h3>
-                                <p className="text-nexus-500 font-medium leading-relaxed">{item.desc}</p>
+                                <span className="md:hidden text-4xl font-black text-slate-200">{item.step}</span>
+                                <h3 className="text-3xl font-black text-slate-900 tracking-tight">{item.title}</h3>
+                                <p className="text-slate-500 font-medium leading-relaxed">{item.desc}</p>
                             </div>
                             <div className="flex-1 w-full">
-                                <img src={item.img} className="rounded-3xl shadow-xl border border-nexus-100 w-full aspect-video object-cover" alt={item.title} />
+                                <img src={item.img} className="rounded-3xl shadow-xl border border-slate-100 w-full aspect-video object-cover" alt={item.title} />
                             </div>
                         </div>
                     ))}
@@ -174,49 +174,49 @@ export const LandingPage: React.FC = () => {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-32 bg-nexus-50/50" id="pricing">
+      <section className="py-32 bg-slate-50/50" id="pricing">
         <div className="max-w-5xl mx-auto px-6">
             <div className="text-center mb-20 leading-tight">
-                <h2 className="text-4xl font-black text-nexus-900 tracking-tight mb-6">シンプルな料金プラン</h2>
-                <p className="text-nexus-500 font-medium">まずは無料で、AIによる知識管理を体験してください。</p>
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight mb-6">シンプルな料金プラン</h2>
+                <p className="text-slate-500 font-medium">まずは無料で、AIによる知識管理を体験してください。</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
                 {/* Free Plan */}
-                <div className="p-10 bg-white rounded-[40px] border border-nexus-100 shadow-xl shadow-nexus-900/5 relative overflow-hidden group hover:border-nexus-200 transition-all flex flex-col">
-                    <div className="absolute top-0 left-0 w-full h-2 bg-nexus-200"></div>
-                    <h3 className="text-2xl font-black text-nexus-900 mb-2">Free</h3>
+                <div className="p-10 bg-white rounded-[40px] border border-slate-100 shadow-xl shadow-slate-900/5 relative overflow-hidden group hover:border-slate-200 transition-all flex flex-col">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-slate-200"></div>
+                    <h3 className="text-2xl font-black text-slate-900 mb-2">Free</h3>
                     <div className="flex items-baseline gap-1 mb-6">
-                        <span className="text-5xl font-black text-nexus-900">¥0</span>
-                        <span className="text-nexus-400 font-bold">/月</span>
+                        <span className="text-5xl font-black text-slate-900">¥0</span>
+                        <span className="text-slate-400 font-bold">/月</span>
                     </div>
-                    <p className="text-nexus-500 font-medium mb-10 leading-relaxed">
+                    <p className="text-slate-500 font-medium mb-10 leading-relaxed">
                         個人での学習記録と、<br/>AIによる基本的なサポートに。
                     </p>
                     <ul className="space-y-4 mb-10 flex-grow">
-                        <li className="flex items-center gap-3 text-nexus-600 font-bold text-sm">
-                            <CheckCircle2 size={18} className="text-nexus-900" />
+                        <li className="flex items-center gap-3 text-slate-600 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-slate-900" />
                             月間10回までのAI解析
                         </li>
-                        <li className="flex items-center gap-3 text-nexus-600 font-bold text-sm">
-                            <CheckCircle2 size={18} className="text-nexus-900" />
+                        <li className="flex items-center gap-3 text-slate-600 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-slate-900" />
                             最大2件のナレッジ保存
                         </li>
-                        <li className="flex items-center gap-3 text-nexus-600 font-bold text-sm">
-                            <CheckCircle2 size={18} className="text-nexus-900" />
+                        <li className="flex items-center gap-3 text-slate-600 font-bold text-sm">
+                            <CheckCircle2 size={18} className="text-slate-900" />
                             基本的なクイズ生成
                         </li>
                     </ul>
                     <button
                         onClick={() => setIsAuthModalOpen(true)}
-                        className="w-full py-4 bg-nexus-100 text-nexus-900 rounded-2xl font-black text-lg hover:bg-nexus-200 transition-all uppercase tracking-widest"
+                        className="w-full py-4 bg-slate-100 text-slate-900 rounded-2xl font-black text-lg hover:bg-slate-200 transition-all uppercase tracking-widest"
                     >
                         無料で始める
                     </button>
                 </div>
 
                 {/* Pro Plan */}
-                <div className="p-10 bg-nexus-900 text-white rounded-[40px] shadow-2xl shadow-nexus-900/20 relative overflow-hidden transform md:-translate-y-4 flex flex-col">
+                <div className="p-10 bg-black text-white rounded-[40px] shadow-2xl shadow-slate-900/20 relative overflow-hidden transform md:-translate-y-4 flex flex-col">
                     <div className="absolute top-0 right-0 bg-gradient-to-bl from-indigo-500 to-purple-500 w-32 h-32 blur-3xl opacity-50"></div>
                     <div className="absolute top-6 right-6 px-4 py-1.5 bg-white/20 backdrop-blur-md rounded-full text-xs font-black uppercase tracking-widest border border-white/10">
                         Popular
@@ -249,7 +249,7 @@ export const LandingPage: React.FC = () => {
                     </ul>
                     <button
                         onClick={() => setIsAuthModalOpen(true)}
-                        className="w-full py-4 bg-white text-nexus-900 rounded-2xl font-black text-lg hover:bg-gray-100 transition-all uppercase tracking-widest"
+                        className="w-full py-4 bg-white text-slate-900 rounded-2xl font-black text-lg hover:bg-gray-100 transition-all uppercase tracking-widest"
                     >
                         Proを試す
                     </button>
@@ -262,7 +262,7 @@ export const LandingPage: React.FC = () => {
       <section className="py-40 bg-white">
         <div className="max-w-3xl mx-auto px-6">
             <div className="text-center mb-16">
-                <h2 className="text-4xl font-black text-nexus-900 tracking-tight">よくあるご質問</h2>
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight">よくあるご質問</h2>
             </div>
             <div className="space-y-4">
                 {[
@@ -271,12 +271,12 @@ export const LandingPage: React.FC = () => {
                     { q: '無料でどこまで使えますか？', a: '無料プランでは月間10回のAI解析と、最大2件のナレッジ保存が可能です。' },
                     { q: 'スマホでも利用できますか？', a: 'はい。ブラウザからのWebアプリ版として、スマホでも最適化された UIでご利用いただけます。' }
                 ].map((faq, i) => (
-                    <details key={i} className="group bg-nexus-50 rounded-2xl border border-nexus-100 overflow-hidden">
-                        <summary className="flex items-center justify-between p-6 cursor-pointer font-bold text-nexus-900 list-none">
+                    <details key={i} className="group bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+                        <summary className="flex items-center justify-between p-6 cursor-pointer font-bold text-slate-900 list-none">
                             {faq.q}
                             <span className="group-open:rotate-180 transition-transform"><ChevronRight /></span>
                         </summary>
-                        <div className="px-6 pb-6 text-nexus-500 font-medium leading-relaxed">
+                        <div className="px-6 pb-6 text-slate-500 font-medium leading-relaxed">
                             {faq.a}
                         </div>
                     </details>
@@ -295,11 +295,11 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
                 <button
                     onClick={() => setIsAuthModalOpen(true)}
-                    className="px-12 py-6 bg-white text-black rounded-2xl font-black text-xl hover:bg-nexus-100 transition-all hover:shadow-2xl hover:scale-105 active:scale-95"
+                    className="px-12 py-6 bg-white text-black rounded-2xl font-black text-xl hover:bg-slate-100 transition-all hover:shadow-2xl hover:scale-105 active:scale-95"
                 >
                     無料で始める
                 </button>
-                <div className="text-left text-nexus-500 text-sm font-bold uppercase tracking-widest leading-none">
+                <div className="text-left text-slate-500 text-sm font-bold uppercase tracking-widest leading-none">
                     NO CREDIT CARD<br/>REQUIRED.
                 </div>
             </div>
@@ -314,47 +314,47 @@ export const LandingPage: React.FC = () => {
                 { title: 'モバイルアプリ', desc: '外出先でのクイック保存と振り返り (Coming Soon)', icon: <User className="text-gray-400"/> },
                 { title: 'VSC Extension', desc: 'エディタから直接知識にアクセス (Coming Soon)', icon: <Github className="text-gray-400"/> }
             ].map((app, i) => (
-                <div key={i} className="p-10 rounded-[40px] bg-nexus-50 border border-nexus-100 flex flex-col items-center text-center group hover:bg-white transition-colors duration-500">
-                    <div className="mb-6 p-4 bg-white rounded-2xl shadow-sm border border-nexus-50 group-hover:scale-110 transition-transform">{app.icon}</div>
-                    <h3 className="text-xl font-bold text-nexus-900 mb-2">{app.title}</h3>
-                    <p className="text-sm text-nexus-500 font-medium">{app.desc}</p>
+                <div key={i} className="p-10 rounded-[40px] bg-slate-50 border border-slate-100 flex flex-col items-center text-center group hover:bg-white transition-colors duration-500">
+                    <div className="mb-6 p-4 bg-white rounded-2xl shadow-sm border border-slate-50 group-hover:scale-110 transition-transform">{app.icon}</div>
+                    <h3 className="text-xl font-bold text-slate-900 mb-2">{app.title}</h3>
+                    <p className="text-sm text-slate-500 font-medium">{app.desc}</p>
                 </div>
             ))}
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="py-32 bg-white border-t border-nexus-100">
+      <footer className="py-32 bg-white border-t border-slate-100">
         <div className="max-w-7xl mx-auto px-6">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-24 mb-24">
                 <div className="space-y-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-nexus-900 rounded-xl flex items-center justify-center text-white font-black">N</div>
+                        <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center text-white font-black">N</div>
                         <span className="text-xl font-black tracking-tighter uppercase">Knowledge Nexus</span>
                     </div>
-                    <p className="text-sm text-nexus-400 font-medium leading-relaxed">
+                    <p className="text-sm text-slate-400 font-medium leading-relaxed">
                         エンジニアのインプットを資産に変える、<br/>次世代の学習記録プラットフォーム。
                     </p>
                 </div>
                 <div className="grid grid-cols-2 col-span-1 md:col-span-3 gap-12 md:gap-24">
                     {['プロダクト', 'リソース', 'コミュニティ', 'サポート'].map(title => (
                         <div key={title} className="space-y-6">
-                            <h4 className="text-xs font-black text-nexus-900 uppercase tracking-[0.2em]">{title}</h4>
+                            <h4 className="text-xs font-black text-slate-900 uppercase tracking-[0.2em]">{title}</h4>
                             <ul className="space-y-4">
                                 {['リンク 1', 'リンク 2', 'リンク 3'].map(link => (
-                                    <li key={link}><a href="#" className="text-sm text-nexus-400 hover:text-nexus-900 font-bold transition-colors">{link}</a></li>
+                                    <li key={link}><a href="#" className="text-sm text-slate-400 hover:text-slate-900 font-bold transition-colors">{link}</a></li>
                                 ))}
                             </ul>
                         </div>
                     ))}
                 </div>
             </div>
-            <div className="pt-12 border-t border-nexus-50 flex flex-col md:flex-row justify-between items-center gap-8">
-                <p className="text-xs text-nexus-400 font-bold uppercase tracking-widest">&copy; 2024 Knowledge Nexus. All rights reserved.</p>
+            <div className="pt-12 border-t border-slate-50 flex flex-col md:flex-row justify-between items-center gap-8">
+                <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">&copy; 2024 Knowledge Nexus. All rights reserved.</p>
                 <div className="flex items-center gap-8">
-                    <Shield size={16} className="text-nexus-200" />
-                    <a href="#" className="text-xs text-nexus-300 font-black hover:text-nexus-900 uppercase tracking-widest transition-colors">Privacy</a>
-                    <a href="#" className="text-xs text-nexus-300 font-black hover:text-nexus-900 uppercase tracking-widest transition-colors">Terms</a>
+                    <Shield size={16} className="text-slate-200" />
+                    <a href="#" className="text-xs text-slate-300 font-black hover:text-slate-900 uppercase tracking-widest transition-colors">Privacy</a>
+                    <a href="#" className="text-xs text-slate-300 font-black hover:text-slate-900 uppercase tracking-widest transition-colors">Terms</a>
                 </div>
             </div>
         </div>
