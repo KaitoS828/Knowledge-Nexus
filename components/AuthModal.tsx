@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Mail, ArrowRight, Loader2, AlertCircle, Check, Lock, UserPlus, LogIn, Github, X } from 'lucide-react';
 import { useAppStore } from '@/store/app-store';
+import { useRouter } from 'next/navigation';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface AuthModalProps {
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { signIn, signUp, signInWithGoogle, signInWithGitHub, signInAsGuest } = useAppStore();
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
   
   const [email, setEmail] = useState('');
@@ -29,6 +31,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         if (activeTab === 'login') {
             await signIn(email, password);
             onClose(); // Close on success
+            router.push('/dashboard');
         } else {
             await signUp(email, password);
             setSuccessMessage('確認メールを送信しました。メール内のリンクをクリックして登録を完了してください。');
@@ -46,6 +49,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
       setError(null);
       setSuccessMessage(null);
       setPassword('');
+  };
+
+  const handleGuestLogin = async () => {
+    await signInAsGuest();
+    onClose();
+    router.push('/dashboard');
   };
 
   return (
@@ -182,7 +191,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
             {/* Guest Login */}
              <button
-                onClick={signInAsGuest}
+                onClick={handleGuestLogin}
                 className="w-full mt-4 text-xs text-nexus-400 hover:text-nexus-600 font-bold transition-colors underline decoration-nexus-200 underline-offset-4 hover:decoration-nexus-400"
             >
                 アカウントを作らずにゲストとして試す

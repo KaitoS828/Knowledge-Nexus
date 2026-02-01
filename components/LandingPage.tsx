@@ -41,7 +41,7 @@ export const LandingPage: React.FC = () => {
                 </button>
                 <button 
                     onClick={() => setIsAuthModalOpen(true)}
-                    className="px-6 py-3 bg-nexus-900 text-white font-black text-sm rounded-xl hover:bg-black transition-all hover:shadow-xl hover:-translate-y-0.5 uppercase tracking-widest"
+                    className="px-6 py-3 bg-nexus-900 text-white font-black text-sm rounded-xl transition-all hover:shadow-xl hover:-translate-y-0.5 uppercase tracking-widest"
                 >
                     無料で始める
                 </button>
@@ -71,7 +71,7 @@ export const LandingPage: React.FC = () => {
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-in fade-in slide-in-from-bottom-12 duration-1000 delay-300">
                 <button
                     onClick={() => setIsAuthModalOpen(true)}
-                    className="group relative px-12 py-6 bg-nexus-900 text-white rounded-[24px] font-black text-xl hover:bg-black transition-all hover:shadow-2xl hover:scale-[1.03] active:scale-[0.98] w-full sm:w-auto overflow-hidden"
+                    className="group relative px-12 py-6 bg-nexus-900 text-white rounded-[24px] font-black text-xl transition-all hover:shadow-2xl hover:scale-[1.03] active:scale-[0.98] w-full sm:w-auto overflow-hidden"
                 >
                     <div className="relative z-10 flex items-center gap-3">
                         無料で今すぐ始める
