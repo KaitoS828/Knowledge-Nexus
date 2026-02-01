@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
+import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store/app-store';
 import { generateKnowledgeGraph } from '@/services/geminiService';
 import { GraphData } from '@/types';
+
+// Force Graph must be loaded client-side only (no SSR) because it uses window/canvas
+const ForceGraph2D = dynamic(() => import('react-force-graph-2d'), { ssr: false });
 
 export const KnowledgeGraph: React.FC = () => {
   const { brain } = useAppStore();
@@ -19,11 +22,17 @@ export const KnowledgeGraph: React.FC = () => {
     loadGraph();
   }, [brain.content]);
 
-  const [dimensions, setDimensions] = useState({ w: window.innerWidth, h: window.innerHeight });
+  // Initial dimensions set to avoid hydration mismatch (SSR cannot access window)
+  const [dimensions, setDimensions] = useState({ w: 800, h: 600 });
+  
   useEffect(() => {
-    const handleResize = () => setDimensions({ w: window.innerWidth - 80, h: window.innerHeight });
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    if (typeof window !== 'undefined') {
+        setDimensions({ w: window.innerWidth, h: window.innerHeight });
+        
+        const handleResize = () => setDimensions({ w: window.innerWidth - 80, h: window.innerHeight });
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }
   }, []);
 
   if (loading) {
