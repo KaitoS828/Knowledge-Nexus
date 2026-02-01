@@ -79,8 +79,20 @@ export const fetchNoteTrends = async (tag?: string): Promise<TrendArticle[]> => 
   try {
     // noteの人気記事API
     const targetUrl = `https://note.com/api/v2/hashtags/${queryTag}/notes?order=trend`;
-    // Use Proxy
-    const response = await fetch(`${CORS_PROXY}${encodeURIComponent(targetUrl)}`);
+
+    // Try Direct Fetch first (sometimes note API allows CORS or we are in a permissive env)
+    // If fail, fall back to Proxy
+    let response;
+    try {
+        response = await fetch(targetUrl);
+    } catch(e) {
+        console.warn('Note direct fetch failed, trying proxy...');
+    }
+
+    if (!response || !response.ok) {
+        // Fallback to proxy
+        response = await fetch(`${CORS_PROXY}${encodeURIComponent(targetUrl)}`);
+    }
 
     if (!response.ok) throw new Error('note API failed');
     
@@ -100,7 +112,7 @@ export const fetchNoteTrends = async (tag?: string): Promise<TrendArticle[]> => 
     cache.set(cacheKey, { data: trendArticles, timestamp: Date.now() });
     return trendArticles;
   } catch (error) {
-    console.error('Failed to fetch note trends:', error);
+    console.warn('Failed to fetch note trends (returning empty list):', error);
     return [];
   }
 };
